@@ -43,7 +43,7 @@ router.get('/', async (req, res) => {
     }
     if (featured === 'true') filter.isFeatured = true;
     if (trending === 'true') filter.isTrending = true;
-    if (isNew === 'true') filter.isNew = true;
+    if (isNew === 'true') filter.isNewProduct = true;
 
     // Apply sorting
     if (sortBy === 'price') {
@@ -56,7 +56,7 @@ router.get('/', async (req, res) => {
 
     const [products, total] = await Promise.all([
       Product.find(filter)
-        .select('title price originalPrice category brand image rating stock isNew isTrending isFeatured')
+        .select('title price originalPrice category brand image rating stock isNewProduct isTrending isFeatured')
         .sort(sort)
         .skip(skip)
         .limit(parseInt(limit)),
@@ -120,7 +120,7 @@ router.get('/category/:category', async (req, res) => {
 
     const [products, total] = await Promise.all([
       Product.find({ category, isActive: true })
-        .select('title price originalPrice brand image rating stock isNew isTrending')
+        .select('title price originalPrice brand image rating stock isNewProduct isTrending')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
