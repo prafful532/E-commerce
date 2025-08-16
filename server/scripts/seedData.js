@@ -42,7 +42,7 @@ const seedProducts = async () => {
         features: ["Active Noise Cancellation", "30hr Battery", "Wireless Charging", "Premium Materials"],
         stock: 50,
         rating: { average: 4.8, count: 324 },
-        isNew: true,
+        isNewProduct: true,
         isTrending: true,
         isFeatured: true,
         tags: ["wireless", "premium", "noise-cancelling"],
@@ -88,7 +88,7 @@ const seedProducts = async () => {
         features: ["100% Cotton", "Pre-shrunk", "Eco-friendly", "Modern Fit"],
         stock: 100,
         rating: { average: 4.4, count: 189 },
-        isNew: true,
+        isNewProduct: true,
         tags: ["cotton", "casual", "sustainable"],
         sku: "CLOTHING-TSHIRT-001",
         reviews: []
@@ -154,7 +154,7 @@ const seedProducts = async () => {
         features: ["Genuine Leather", "Multiple Compartments", "Adjustable Strap", "Premium Hardware"],
         stock: 30,
         rating: { average: 4.6, count: 143 },
-        isNew: true,
+        isNewProduct: true,
         tags: ["leather", "luxury", "handbag"],
         sku: "ACCESSORIES-HANDBAG-001",
         reviews: []
