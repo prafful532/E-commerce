@@ -49,6 +49,7 @@ function App() {
                 </main>
                 <Footer />
                 <ChatBot />
+                <AdminQuickLogin />
                 <Toaster 
                   position="top-right"
                   toastOptions={{
