@@ -100,7 +100,7 @@ const productSchema = new mongoose.Schema({
     }
   },
   reviews: [reviewSchema],
-  isNew: {
+  isNewProduct: {
     type: Boolean,
     default: false
   },
