@@ -9,6 +9,7 @@ import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ChatBot from './components/ChatBot';
 import AdminQuickLogin from './components/AdminQuickLogin';
+import DemoModeIndicator from './components/DemoModeIndicator';
 import Home from './pages/Home';
 import Collections from './pages/Collections';
 import ProductDetail from './pages/ProductDetail';
