@@ -220,7 +220,7 @@ const seedUsers = async () => {
     // Clear existing users
     await User.deleteMany({});
     
-    const users = [
+    const userData = [
       {
         name: "Admin User",
         email: "admin@modernstore.com",
@@ -245,7 +245,14 @@ const seedUsers = async () => {
       }
     ];
 
-    const createdUsers = await User.insertMany(users);
+    // Create users one by one to trigger password hashing middleware
+    const createdUsers = [];
+    for (const userData of userData) {
+      const user = new User(userData);
+      await user.save();
+      createdUsers.push(user);
+    }
+
     console.log(`${createdUsers.length} users seeded successfully`);
     
     return createdUsers;
