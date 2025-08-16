@@ -142,7 +142,7 @@ router.post('/products', adminAuth, async (req, res) => {
       features,
       stock,
       tags,
-      isNew,
+      isNewProduct,
       isTrending,
       isFeatured
     } = req.body;
@@ -174,7 +174,7 @@ router.post('/products', adminAuth, async (req, res) => {
       stock,
       tags: tags || [],
       sku,
-      isNew: isNew || false,
+      isNewProduct: isNewProduct || false,
       isTrending: isTrending || false,
       isFeatured: isFeatured || false
     });
