@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { 
-  FiUsers, 
-  FiShoppingBag, 
-  FiPackage, 
+import {
+  FiUsers,
+  FiShoppingBag,
+  FiPackage,
   FiDollarSign,
   FiPlus,
   FiEdit3,
@@ -10,7 +10,7 @@ import {
   FiEye,
   FiSearch,
   FiFilter,
-  FiBarChart3,
+  FiBarChart2,
   FiSettings
 } from 'react-icons/fi';
 import { motion } from 'framer-motion';
