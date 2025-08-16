@@ -153,7 +153,7 @@ const ChatBot: React.FC = () => {
       let searchQuery = query
         .replace(/find|search|looking for|show me/g, '')
         .trim();
-      
+
       // Extract category if mentioned
       let category = '';
       if (query.includes('electronic') || query.includes('gadget')) category = 'electronics';
@@ -189,8 +189,49 @@ const ChatBot: React.FC = () => {
         };
       }
     } catch (error) {
+      // Return demo products for common searches in demo mode
+      const demoProducts = [
+        {
+          id: 1,
+          title: 'Premium Wireless Headphones',
+          price: { usd: 299.99, inr: 24999 },
+          image: 'https://images.pexels.com/photos/3394650/pexels-photo-3394650.jpeg',
+          category: 'electronics',
+          stock: 50
+        },
+        {
+          id: 2,
+          title: 'Smart Fitness Watch',
+          price: { usd: 199.99, inr: 16699 },
+          image: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg',
+          category: 'electronics',
+          stock: 35
+        }
+      ];
+
+      if (query.includes('headphone') || query.includes('audio') || query.includes('electronic')) {
+        const actions: MessageAction[] = demoProducts.flatMap((product: Product) => [
+          {
+            type: 'add_to_cart',
+            label: `Add ${product.title} to Cart`,
+            productId: product.id
+          },
+          {
+            type: 'add_to_wishlist',
+            label: `Add ${product.title} to Wishlist`,
+            productId: product.id
+          }
+        ]);
+
+        return {
+          text: `Here are some products I found (demo mode):`,
+          actions,
+          products: demoProducts
+        };
+      }
+
       return {
-        text: "Sorry, I'm having trouble searching for products right now. Please try again later."
+        text: "I'm currently in demo mode. Try searching for 'headphones' or 'electronics' to see sample products, or connect to the backend server for full functionality."
       };
     }
   };
