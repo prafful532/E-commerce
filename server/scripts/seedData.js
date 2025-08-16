@@ -247,8 +247,8 @@ const seedUsers = async () => {
 
     // Create users one by one to trigger password hashing middleware
     const createdUsers = [];
-    for (const userData of userData) {
-      const user = new User(userData);
+    for (const userInfo of userData) {
+      const user = new User(userInfo);
       await user.save();
       createdUsers.push(user);
     }
