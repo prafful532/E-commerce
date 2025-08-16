@@ -84,19 +84,6 @@ const Admin: React.FC = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Check if we're in demo mode
-      if (authContext?.token === 'demo-admin-token') {
-        // Use mock data for demo mode
-        setDashboardStats({
-          totalProducts: 8,
-          totalUsers: 42,
-          totalOrders: 156,
-          totalRevenue: 245000
-        });
-        setLoading(false);
-        return;
-      }
-
       const response = await fetch('/api/admin/dashboard', {
         headers: {
           'Authorization': `Bearer ${authContext?.token}`
@@ -107,25 +94,11 @@ const Admin: React.FC = () => {
       if (data.success) {
         setDashboardStats(data.data.stats);
       } else {
-        // Fallback to demo data if API fails
-        setDashboardStats({
-          totalProducts: 8,
-          totalUsers: 42,
-          totalOrders: 156,
-          totalRevenue: 245000
-        });
-        toast.warning('Using demo data - database not connected');
+        toast.error('Failed to load dashboard data');
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // Fallback to demo data
-      setDashboardStats({
-        totalProducts: 8,
-        totalUsers: 42,
-        totalOrders: 156,
-        totalRevenue: 245000
-      });
-      toast.warning('Using demo data - server not responding');
+      toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
     }
