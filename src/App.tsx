@@ -32,6 +32,7 @@ function App() {
             <Router>
               <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
                 <Navbar />
+                <DemoModeIndicator />
                 <main className="flex-1">
                   <Routes>
                     <Route path="/" element={<Home />} />
