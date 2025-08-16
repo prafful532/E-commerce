@@ -247,7 +247,7 @@ const Admin: React.FC = () => {
   }
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: FiBarChart3 },
+    { id: 'dashboard', label: 'Dashboard', icon: FiBarChart2 },
     { id: 'products', label: 'Products', icon: FiPackage },
     { id: 'orders', label: 'Orders', icon: FiShoppingBag },
     { id: 'users', label: 'Users', icon: FiUsers },
