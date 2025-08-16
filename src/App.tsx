@@ -10,6 +10,7 @@ import Footer from './components/layout/Footer';
 import ChatBot from './components/ChatBot';
 import AdminQuickLogin from './components/AdminQuickLogin';
 import DemoModeIndicator from './components/DemoModeIndicator';
+import QuickHelp from './components/QuickHelp';
 import Home from './pages/Home';
 import Collections from './pages/Collections';
 import ProductDetail from './pages/ProductDetail';
