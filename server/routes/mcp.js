@@ -182,7 +182,7 @@ router.get('/products/search', async (req, res) => {
     searchFilter.isActive = true;
 
     const products = await Product.find(searchFilter)
-      .select('title description price category brand image stock rating isNew isTrending')
+      .select('title description price category brand image stock rating isNewProduct isTrending')
       .limit(parseInt(limit))
       .sort({ rating: -1, createdAt: -1 });
 
@@ -283,7 +283,7 @@ router.get('/recommendations', auth, async (req, res) => {
     }
 
     const recommendations = await Product.find(filter)
-      .select('title description price category brand image stock rating isNew isTrending')
+      .select('title description price category brand image stock rating isNewProduct isTrending')
       .sort({ rating: -1, isTrending: -1, createdAt: -1 })
       .limit(parseInt(limit));
 
