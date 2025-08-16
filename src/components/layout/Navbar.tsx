@@ -118,6 +118,14 @@ const Navbar: React.FC = () => {
                     >
                       Profile
                     </Link>
+                    {user.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
+                      >
+                        Admin Panel
+                      </Link>
+                    )}
                     <button
                       onClick={logout}
                       className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-b-lg"
