@@ -53,8 +53,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           if (response.ok) {
             const data = await response.json();
-            setUser(data.user);
+            if (data.success && data.user) {
+              setUser(data.user);
+            } else {
+              console.warn('Invalid user data received:', data);
+              localStorage.removeItem('token');
+              setToken(null);
+            }
           } else {
+            console.warn('Auth verification failed with status:', response.status);
             localStorage.removeItem('token');
             setToken(null);
           }
