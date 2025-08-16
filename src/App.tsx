@@ -53,6 +53,7 @@ function App() {
                 <Footer />
                 <ChatBot />
                 <AdminQuickLogin />
+                <QuickHelp />
                 <Toaster 
                   position="top-right"
                   toastOptions={{
