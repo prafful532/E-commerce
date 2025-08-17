@@ -53,13 +53,13 @@ A full-stack e-commerce platform built with React, TypeScript, Express.js, and M
 - **CORS** for cross-origin requests
 - **Morgan** for logging
 
-## 📋 Prerequisites
+## Prerequisites
 
 - Node.js (v16 or higher)
 - MongoDB (local or cloud instance)
 - Razorpay account (for payment testing)
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Clone the Repository
 ```bash
@@ -122,7 +122,7 @@ This will start:
 - Frontend server at `http://localhost:5173`
 - Backend server at `http://localhost:5000`
 
-## 🎯 Key Features Walkthrough
+## Key Features Walkthrough
 
 ### 1. MCP-Powered Chatbot
 The chatbot uses Model Context Protocol to provide intelligent shopping assistance:
@@ -165,7 +165,7 @@ Access at `/admin` with admin credentials:
 3. **Razorpay Integration**: Secure payment processing
 4. **Order Confirmation**: Email notifications and tracking
 
-## 🔧 API Endpoints
+##  API Endpoints
 
 ### Authentication
 - `POST /api/auth/register` - User registration
@@ -196,7 +196,7 @@ Access at `/admin` with admin credentials:
 - `PUT /api/admin/products/:id` - Update product
 - `DELETE /api/admin/products/:id` - Delete product
 
-## 🌟 Advanced Features
+##  Advanced Features
 
 ### 1. Currency Conversion System
 ```javascript
@@ -226,7 +226,7 @@ const response = await fetch('/api/mcp/cart/add', {
 - CORS protection
 - Rate limiting (configurable)
 
-## 🚀 Deployment
+##  Deployment
 
 ### Frontend Deployment
 ```bash
@@ -249,7 +249,7 @@ FRONTEND_URL=https://your-domain.com
 RAZORPAY_KEY_ID=rzp_live_your_key_id
 ```
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/amazing-feature`
@@ -257,11 +257,11 @@ RAZORPAY_KEY_ID=rzp_live_your_key_id
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
 
-## 📝 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+##  Acknowledgments
 
 - **Razorpay** for payment gateway integration
 - **MongoDB** for database services
@@ -269,10 +269,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Pexels** for product images
 - **React Community** for excellent libraries
 
-## 📞 Support
+##  Support
 
-For support, email support@modernstore.com or join our Discord community.
+For support, email  or join our Discord community.
 
 ---
 
-**Built with ❤️ for the Indian e-commerce market**
+**Built with  for the Indian e-commerce market**
