@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FiEye, FiEyeOff, FiMail, FiLock, FiUser } from 'react-icons/fi';
+import { FaGoogle } from 'react-icons/fa';
 import { AuthContext } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 
@@ -94,6 +95,9 @@ const Register: React.FC = () => {
     }
   };
 
+  const handleGoogleLogin = () => {
+    authContext?.loginWithGoogle();
+  };
   if (authContext?.loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -298,6 +302,28 @@ const Register: React.FC = () => {
             </motion.button>
           </div>
 
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300 dark:border-gray-600" />
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-50 dark:bg-gray-900 text-gray-500">Or continue with</span>
+            </div>
+          </div>
+
+          <div>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="group relative w-full flex justify-center py-3 px-4 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+            >
+              <FaGoogle className="h-5 w-5 text-red-500 mr-3" />
+              Sign up with Google
+            </motion.button>
+          </div>
           <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
             By creating an account, you agree to our{' '}
             <Link to="/terms" className="text-blue-600 hover:text-blue-500">

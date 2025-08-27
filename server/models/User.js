@@ -16,8 +16,11 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: [true, 'Password is required'],
     minlength: 6
+  },
+  googleId: {
+    type: String,
+    sparse: true
   },
   role: {
     type: String,
@@ -28,16 +31,22 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  phone: {
+    type: String,
+    trim: true
+  },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false
+  },
+  phoneVerificationCode: String,
+  phoneVerificationExpires: Date,
   address: {
     street: String,
     city: String,
     state: String,
     zipCode: String,
     country: String
-  },
-  phone: {
-    type: String,
-    trim: true
   },
   wishlist: [{
     type: mongoose.Schema.Types.ObjectId,
@@ -59,6 +68,29 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  notifications: [{
+    type: {
+      type: String,
+      enum: ['order', 'payment', 'promotion', 'system'],
+      required: true
+    },
+    title: {
+      type: String,
+      required: true
+    },
+    message: {
+      type: String,
+      required: true
+    },
+    read: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   resetPasswordToken: String,
   resetPasswordExpires: Date,
   emailVerificationToken: String,
@@ -69,13 +101,14 @@ const userSchema = new mongoose.Schema({
 
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
 // Compare password method
 userSchema.methods.comparePassword = async function(password) {
+  if (!this.password) return false;
   return await bcrypt.compare(password, this.password);
 };
 

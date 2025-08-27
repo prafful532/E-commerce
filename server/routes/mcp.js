@@ -2,10 +2,256 @@ const express = require('express');
 const { auth } = require('../middleware/auth');
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order');
 const { convertProductPrices } = require('../utils/currency');
 
 const router = express.Router();
 
+/**
+ * MCP Route: Enhanced AI Chat - Get user context
+ * GET /api/mcp/user-context
+ */
+router.get('/user-context', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id)
+      .populate('wishlist', 'title category price')
+      .populate('cart.product', 'title category price');
+
+    const recentOrders = await Order.find({ user: req.user.id })
+      .populate('items.product', 'title category')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    // Analyze user preferences
+    const preferences = {
+      favoriteCategories: [],
+      priceRange: { min: 0, max: 1000 },
+      recentActivity: []
+    };
+
+    // Extract favorite categories from wishlist and orders
+    const categoryCount = {};
+    
+    user.wishlist.forEach(item => {
+      categoryCount[item.category] = (categoryCount[item.category] || 0) + 1;
+    });
+    
+    recentOrders.forEach(order => {
+      order.items.forEach(item => {
+        if (item.product) {
+          categoryCount[item.product.category] = (categoryCount[item.product.category] || 0) + 1;
+        }
+      });
+    });
+
+    preferences.favoriteCategories = Object.entries(categoryCount)
+      .sort(([,a], [,b]) => b - a)
+      .slice(0, 3)
+      .map(([category]) => category);
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          name: user.name,
+          email: user.email,
+          isEmailVerified: user.isEmailVerified,
+          isPhoneVerified: user.isPhoneVerified
+        },
+        preferences,
+        stats: {
+          wishlistCount: user.wishlist.length,
+          cartCount: user.cart.length,
+          orderCount: recentOrders.length
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('MCP User Context Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to get user context' 
+    });
+  }
+});
+
+/**
+ * MCP Route: AI-powered product recommendations
+ * GET /api/mcp/ai-recommendations
+ */
+router.get('/ai-recommendations', auth, async (req, res) => {
+  try {
+    const { query, limit = 5 } = req.query;
+    
+    const user = await User.findById(req.user.id).populate('wishlist');
+    
+    let filter = { isActive: true };
+    
+    // AI-like recommendation logic
+    if (user.wishlist.length > 0) {
+      const categories = [...new Set(user.wishlist.map(item => item.category))];
+      const brands = [...new Set(user.wishlist.map(item => item.brand))];
+      
+      if (query) {
+        // Combine user preferences with search query
+        filter.$or = [
+          { title: { $regex: query, $options: 'i' } },
+          { description: { $regex: query, $options: 'i' } },
+          { category: { $in: categories } },
+          { brand: { $in: brands } }
+        ];
+      } else {
+        filter.$or = [
+          { category: { $in: categories } },
+          { brand: { $in: brands } }
+        ];
+      }
+    } else if (query) {
+      filter.$text = { $search: query };
+    }
+
+    // Exclude products already in wishlist
+    if (user.wishlist.length > 0) {
+      filter._id = { $nin: user.wishlist.map(item => item._id) };
+    }
+
+    const recommendations = await Product.find(filter)
+      .select('title description price category brand image stock rating isNewProduct isTrending')
+      .sort({ 
+        rating: -1, 
+        isTrending: -1, 
+        isNewProduct: -1,
+        createdAt: -1 
+      })
+      .limit(parseInt(limit));
+
+    const recommendationsWithPrices = await Promise.all(
+      recommendations.map(product => convertProductPrices(product.toObject()))
+    );
+
+    res.json({
+      success: true,
+      count: recommendationsWithPrices.length,
+      data: recommendationsWithPrices,
+      context: {
+        basedOn: user.wishlist.length > 0 ? 'user_preferences' : 'trending',
+        query: query || null
+      }
+    });
+
+  } catch (error) {
+    console.error('MCP AI Recommendations Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to get AI recommendations' 
+    });
+  }
+});
+
+/**
+ * MCP Route: Smart search with context
+ * GET /api/mcp/smart-search
+ */
+router.get('/smart-search', async (req, res) => {
+  try {
+    const { 
+      query, 
+      category, 
+      minPrice, 
+      maxPrice, 
+      inStock = true, 
+      limit = 10,
+      intent // 'buy', 'compare', 'browse'
+    } = req.query;
+
+    let searchFilter = { isActive: true };
+    let sortCriteria = {};
+
+    // Text search with fuzzy matching
+    if (query) {
+      const searchTerms = query.toLowerCase().split(' ');
+      searchFilter.$or = [
+        { title: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } },
+        { brand: { $regex: query, $options: 'i' } },
+        { tags: { $in: searchTerms } },
+        { features: { $elemMatch: { $regex: query, $options: 'i' } } }
+      ];
+    }
+
+    // Category filter
+    if (category) {
+      searchFilter.category = category;
+    }
+
+    // Price filter (assuming INR prices for search)
+    if (minPrice || maxPrice) {
+      searchFilter['price.inr'] = {};
+      if (minPrice) searchFilter['price.inr'].$gte = parseFloat(minPrice);
+      if (maxPrice) searchFilter['price.inr'].$lte = parseFloat(maxPrice);
+    }
+
+    // Stock filter
+    if (inStock === 'true') {
+      searchFilter.stock = { $gt: 0 };
+    }
+
+    // Intent-based sorting
+    switch (intent) {
+      case 'buy':
+        sortCriteria = { rating: -1, 'price.inr': 1 }; // Best rated, lowest price first
+        break;
+      case 'compare':
+        sortCriteria = { rating: -1, createdAt: -1 }; // Best rated, newest first
+        break;
+      case 'browse':
+      default:
+        sortCriteria = { isTrending: -1, rating: -1, createdAt: -1 };
+        break;
+    }
+
+    const products = await Product.find(searchFilter)
+      .select('title description price originalPrice category brand image stock rating isNewProduct isTrending features')
+      .sort(sortCriteria)
+      .limit(parseInt(limit));
+
+    // Convert prices for all products
+    const productsWithPrices = await Promise.all(
+      products.map(product => convertProductPrices(product.toObject()))
+    );
+
+    // Add search insights
+    const insights = {
+      totalFound: productsWithPrices.length,
+      priceRange: {
+        min: Math.min(...productsWithPrices.map(p => p.price.inr)),
+        max: Math.max(...productsWithPrices.map(p => p.price.inr))
+      },
+      categories: [...new Set(productsWithPrices.map(p => p.category))],
+      brands: [...new Set(productsWithPrices.map(p => p.brand))]
+    };
+
+    res.json({
+      success: true,
+      count: productsWithPrices.length,
+      data: productsWithPrices,
+      insights,
+      searchContext: {
+        query,
+        intent: intent || 'browse',
+        filters: { category, minPrice, maxPrice, inStock }
+      }
+    });
+
+  } catch (error) {
+    console.error('MCP Smart Search Error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to perform smart search' 
+    });
+  }
+});
 /**
  * MCP Route: Add product to cart via chatbot
  * POST /api/mcp/cart/add
@@ -58,6 +304,14 @@ router.post('/cart/add', auth, async (req, res) => {
 
     await user.save();
 
+    // Add notification
+    user.notifications.push({
+      type: 'system',
+      title: 'Added to Cart',
+      message: `${product.title} has been added to your cart via AI assistant.`,
+      read: false
+    });
+    await user.save();
     // Convert prices for response
     const productWithPrices = await convertProductPrices(product.toObject());
 
@@ -116,6 +370,15 @@ router.post('/wishlist/add', auth, async (req, res) => {
     }
 
     user.wishlist.push(productId);
+    
+    // Add notification
+    user.notifications.push({
+      type: 'system',
+      title: 'Added to Wishlist',
+      message: `${product.title} has been added to your wishlist via AI assistant.`,
+      read: false
+    });
+    
     await user.save();
 
     // Convert prices for response

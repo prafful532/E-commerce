@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FiCreditCard, FiTruck, FiLock, FiSmartphone } from 'react-icons/fi';
+import { FiCreditCard, FiTruck, FiLock, FiSmartphone, FiDownload } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -10,6 +10,8 @@ const Checkout: React.FC = () => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [qrCodeData, setQrCodeData] = useState<any>(null);
+  const [showQRCode, setShowQRCode] = useState(false);
   
   const [shippingData, setShippingData] = useState({
     firstName: '',
@@ -45,28 +47,160 @@ const Checkout: React.FC = () => {
   const tax = totalPrice * 0.08;
   const finalTotal = totalPrice + shippingCost + tax;
 
+  const generateQRCode = async () => {
+    try {
+      // First create an order
+      const orderResponse = await fetch('/api/payment/create-order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            productId: item.id,
+            quantity: item.quantity,
+            size: item.size,
+            color: item.color
+          })),
+          shippingAddress: shippingData,
+          currency: 'INR'
+        })
+      });
+
+      const orderData = await orderResponse.json();
+      if (!orderData.success) {
+        toast.error('Failed to create order');
+        return;
+      }
+
+      // Generate QR code for the order
+      const qrResponse = await fetch('/api/payment/generate-qr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user?.token}`
+        },
+        body: JSON.stringify({
+          orderId: orderData.data.order._id,
+          amount: Math.round(finalTotal * 83), // Convert to INR
+          currency: 'INR'
+        })
+      });
+
+      const qrData = await qrResponse.json();
+      if (qrData.success) {
+        setQrCodeData(qrData.data);
+        setShowQRCode(true);
+        toast.success('QR Code generated! Scan to pay.');
+      } else {
+        toast.error('Failed to generate QR code');
+      }
+    } catch (error) {
+      console.error('QR Code generation error:', error);
+      toast.error('Failed to generate QR code');
+    }
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Simulate payment processing
-    toast.loading('Processing payment...');
-    
-    setTimeout(() => {
-      toast.dismiss();
-      toast.success('Order placed successfully!');
-      clearCart();
-      // In a real app, redirect to order confirmation
-    }, 2000);
+    if (paymentMethod === 'qr_code') {
+      await generateQRCode();
+    } else {
+      // Simulate payment processing
+      toast.loading('Processing payment...');
+      
+      setTimeout(() => {
+        toast.dismiss();
+        toast.success('Order placed successfully!');
+        clearCart();
+        // In a real app, redirect to order confirmation
+      }, 2000);
+    }
   };
 
   const paymentMethods = [
     { id: 'card', name: 'Credit/Debit Card', icon: FiCreditCard },
     { id: 'razorpay', name: 'Razorpay', icon: FiSmartphone },
-    { id: 'stripe', name: 'Stripe', icon: FiCreditCard },
     { id: 'upi', name: 'UPI', icon: FiSmartphone },
+    { id: 'qr_code', name: 'QR Code Payment', icon: FiDownload },
     { id: 'cod', name: 'Cash on Delivery', icon: FiTruck },
   ];
 
+  if (showQRCode && qrCodeData) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white dark:bg-gray-800 rounded-lg p-8 text-center"
+          >
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              Scan QR Code to Pay
+            </h2>
+            
+            <div className="bg-white p-4 rounded-lg inline-block mb-6">
+              <img 
+                src={qrCodeData.qrCode} 
+                alt="Payment QR Code" 
+                className="w-64 h-64 mx-auto"
+              />
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div className="text-lg">
+                <span className="text-gray-600 dark:text-gray-400">Amount: </span>
+                <span className="font-bold text-green-600">₹{qrCodeData.amount.inr.toLocaleString()}</span>
+              </div>
+              
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Payment ID: {qrCodeData.paymentId}
+              </div>
+              
+              <div className="text-sm text-orange-600 dark:text-orange-400">
+                ⏰ Expires in 15 minutes
+              </div>
+            </div>
+            
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                How to Pay:
+              </h3>
+              <ol className="text-sm text-blue-700 dark:text-blue-300 text-left space-y-1">
+                <li>1. Open any UPI app (PhonePe, Paytm, Google Pay, etc.)</li>
+                <li>2. Scan the QR code above</li>
+                <li>3. Verify the amount: ₹{qrCodeData.amount.inr.toLocaleString()}</li>
+                <li>4. Complete the payment</li>
+                <li>5. Your order will be confirmed automatically</li>
+              </ol>
+            </div>
+            
+            <div className="flex space-x-4 justify-center">
+              <button
+                onClick={() => setShowQRCode(false)}
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Back to Payment Options
+              </button>
+              
+              <button
+                onClick={() => {
+                  // Simulate payment verification
+                  toast.success('Payment completed successfully!');
+                  clearCart();
+                  setShowQRCode(false);
+                }}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                I've Paid
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -285,6 +419,17 @@ const Checkout: React.FC = () => {
                   </div>
                 )}
 
+                {/* QR Code Payment Info */}
+                {paymentMethod === 'qr_code' && (
+                  <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                    <h4 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
+                      QR Code Payment
+                    </h4>
+                    <p className="text-sm text-blue-700 dark:text-blue-300">
+                      Click "Place Order" to generate a QR code that you can scan with any UPI app to complete your payment.
+                    </p>
+                  </div>
+                )}
                 {/* QR Code for UPI */}
                 {paymentMethod === 'upi' && (
                   <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
@@ -308,7 +453,7 @@ const Checkout: React.FC = () => {
                   type="submit"
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-lg font-semibold text-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 >
-                  Place Order - ${finalTotal.toFixed(2)}
+                  {paymentMethod === 'qr_code' ? 'Generate QR Code' : `Place Order - $${finalTotal.toFixed(2)}`}
                 </button>
               </motion.div>
             </form>
@@ -370,6 +515,10 @@ const Checkout: React.FC = () => {
                   <span className="font-semibold text-gray-900 dark:text-white">
                     ${tax.toFixed(2)}
                   </span>
+                </div>
+                <div className="flex justify-between text-sm text-gray-500 dark:text-gray-400">
+                  <span>Amount in INR</span>
+                  <span>₹{Math.round(finalTotal * 83).toLocaleString()}</span>
                 </div>
                 <hr className="border-gray-200 dark:border-gray-600" />
                 <div className="flex justify-between">

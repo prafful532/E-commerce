@@ -13,6 +13,7 @@ interface Message {
   timestamp: Date;
   actions?: MessageAction[];
   products?: Product[];
+  context?: any;
 }
 
 interface MessageAction {
@@ -36,18 +37,46 @@ const ChatBot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
-      text: "Hi! I'm your shopping assistant. I can help you find products, add items to your cart or wishlist, and answer questions about our store. How can I help you today?",
+      text: "Hi! I'm your AI shopping assistant powered by MCP (Model Context Protocol). I can help you find products, add items to your cart or wishlist, get personalized recommendations, and answer questions about our store. How can I help you today?",
       isBot: true,
       timestamp: new Date(),
     },
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userContext, setUserContext] = useState<any>(null);
 
   const { addToCart } = useCart();
   const { addToWishlist } = useWishlist();
   const authContext = useContext(AuthContext);
 
+  // Fetch user context when chat opens
+  React.useEffect(() => {
+    if (isOpen && authContext?.user && !userContext) {
+      fetchUserContext();
+    }
+  }, [isOpen, authContext?.user]);
+
+  const fetchUserContext = async () => {
+    if (!authContext?.token) return;
+
+    try {
+      const response = await fetch('/api/mcp/user-context', {
+        headers: {
+          'Authorization': `Bearer ${authContext.token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setUserContext(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch user context:', error);
+    }
+  };
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
 
@@ -72,6 +101,7 @@ const ChatBot: React.FC = () => {
         timestamp: new Date(),
         actions: botResponse.actions,
         products: botResponse.products,
+        context: botResponse.context,
       };
       setMessages(prev => [...prev, botMessage]);
     } catch (error) {
@@ -87,13 +117,34 @@ const ChatBot: React.FC = () => {
     }
   };
 
-  const getBotResponse = async (userInput: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[] }> => {
+  const getBotResponse = async (userInput: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[]; context?: any }> => {
     const input = userInput.toLowerCase();
     
     try {
+      // Enhanced AI responses with context awareness
+      if (userContext && authContext?.user) {
+        // Personalized greeting
+        if (input.includes('hello') || input.includes('hi')) {
+          const greeting = userContext.user.name ? `Hello ${userContext.user.name}!` : 'Hello!';
+          let contextInfo = '';
+          
+          if (userContext.stats.wishlistCount > 0) {
+            contextInfo += ` I see you have ${userContext.stats.wishlistCount} items in your wishlist.`;
+          }
+          
+          if (userContext.preferences.favoriteCategories.length > 0) {
+            contextInfo += ` Based on your preferences, you seem to like ${userContext.preferences.favoriteCategories.join(', ')}.`;
+          }
+          
+          return {
+            text: `${greeting} Welcome back to ModernStore!${contextInfo} How can I assist you today?`
+          };
+        }
+      }
+
       // Check for product search queries
       if (input.includes('find') || input.includes('search') || input.includes('looking for') || input.includes('show me')) {
-        return await handleProductSearch(input);
+        return await handleSmartSearch(input);
       }
       
       // Check for availability queries
@@ -103,13 +154,18 @@ const ChatBot: React.FC = () => {
       
       // Check for recommendations
       if (input.includes('recommend') || input.includes('suggest') || input.includes('similar')) {
-        return await handleRecommendations(input);
+        return await handleAIRecommendations(input);
+      }
+      
+      // Check for personalized queries
+      if (input.includes('for me') || input.includes('my style') || input.includes('what should i buy')) {
+        return await handlePersonalizedRecommendations();
       }
       
       // Standard responses
       if (input.includes('price') || input.includes('cost')) {
         return {
-          text: "I can help you find products within your budget! What's your price range? You can also tell me what type of product you're looking for."
+          text: "I can help you find products within your budget! What's your price range? I can also show you products based on your previous preferences."
         };
       } else if (input.includes('size') || input.includes('sizing')) {
         return {
@@ -123,10 +179,6 @@ const ChatBot: React.FC = () => {
         return {
           text: "We have a 30-day return policy! Items must be unused and in original packaging. You can initiate returns from your profile page after logging in."
         };
-      } else if (input.includes('hello') || input.includes('hi')) {
-        return {
-          text: "Hello! Welcome to ModernStore. I'm here to help you find exactly what you're looking for. I can search for products, check availability, add items to your cart or wishlist, and provide recommendations. What can I assist you with today?"
-        };
       } else if (input.includes('cart') && input.includes('add')) {
         return {
           text: "I can help you add products to your cart! Just tell me which product you're interested in, and I'll find it for you."
@@ -137,7 +189,7 @@ const ChatBot: React.FC = () => {
         };
       } else {
         return {
-          text: "I'm here to help you shop! You can ask me to:\n• Find specific products\n• Check if items are in stock\n• Add products to your cart or wishlist\n• Get personalized recommendations\n• Answer questions about shipping and returns\n\nWhat would you like to do?"
+          text: "I'm your AI shopping assistant! You can ask me to:\n• Find specific products with smart search\n• Get personalized recommendations based on your preferences\n• Check product availability and stock\n• Add products to your cart or wishlist\n• Answer questions about shipping, returns, and policies\n• Help you discover new products you might love\n\nWhat would you like to do?"
         };
       }
     } catch (error) {
@@ -147,7 +199,7 @@ const ChatBot: React.FC = () => {
     }
   };
 
-  const handleProductSearch = async (query: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[] }> => {
+  const handleSmartSearch = async (query: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[]; context?: any }> => {
     try {
       // Extract search terms
       let searchQuery = query
@@ -161,7 +213,16 @@ const ChatBot: React.FC = () => {
       else if (query.includes('shoe') || query.includes('sneaker')) category = 'shoes';
       else if (query.includes('accessory') || query.includes('bag') || query.includes('handbag')) category = 'accessories';
 
-      const response = await fetch(`/api/mcp/products/search?query=${encodeURIComponent(searchQuery)}&category=${category}&limit=3`);
+      // Determine search intent
+      let intent = 'browse';
+      if (query.includes('buy') || query.includes('purchase')) intent = 'buy';
+      else if (query.includes('compare')) intent = 'compare';
+
+      const response = await fetch(`/api/mcp/smart-search?query=${encodeURIComponent(searchQuery)}&category=${category}&intent=${intent}&limit=3`, {
+        headers: authContext?.token ? {
+          'Authorization': `Bearer ${authContext.token}`
+        } : {}
+      });
       const data = await response.json();
 
       if (data.success && data.data.length > 0) {
@@ -178,14 +239,19 @@ const ChatBot: React.FC = () => {
           }
         ]);
 
+        let contextText = '';
+        if (data.insights) {
+          contextText = ` Found ${data.insights.totalFound} products in ${data.insights.categories.join(', ')} categories.`;
+        }
         return {
-          text: `I found ${data.data.length} product(s) for you:`,
+          text: `I found ${data.data.length} product(s) for you:${contextText}`,
           actions,
-          products: data.data
+          products: data.data,
+          context: data.searchContext
         };
       } else {
         return {
-          text: "I couldn't find any products matching your search. Try different keywords or browse our categories: Electronics, Clothing, Shoes, or Accessories."
+          text: "I couldn't find any products matching your search. Would you like me to suggest some popular items or help you refine your search?"
         };
       }
     } catch (error) {
@@ -236,14 +302,7 @@ const ChatBot: React.FC = () => {
     }
   };
 
-  const handleAvailabilityCheck = async (query: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[] }> => {
-    // This is a simplified version - in a real implementation, you'd extract product names from the query
-    return {
-      text: "To check if a specific product is available, please tell me the exact product name or search for it first, and I'll check the current stock levels for you."
-    };
-  };
-
-  const handleRecommendations = async (query: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[] }> => {
+  const handleAIRecommendations = async (query: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[]; context?: any }> => {
     try {
       const token = authContext?.token;
       const headers: HeadersInit = {};
@@ -251,7 +310,7 @@ const ChatBot: React.FC = () => {
         headers.Authorization = `Bearer ${token}`;
       }
 
-      const response = await fetch('/api/mcp/recommendations?limit=3', {
+      const response = await fetch(`/api/mcp/ai-recommendations?query=${encodeURIComponent(query)}&limit=3`, {
         headers
       });
       const data = await response.json();
@@ -270,10 +329,18 @@ const ChatBot: React.FC = () => {
           }
         ]);
 
+        let contextText = '';
+        if (data.context) {
+          contextText = data.context.basedOn === 'user_preferences' 
+            ? ' Based on your preferences and wishlist items:'
+            : ' Here are some trending products:';
+        }
+
         return {
-          text: "Here are some products I think you'll love:",
+          text: `Here are my AI-powered recommendations${contextText}`,
           actions,
-          products: data.data
+          products: data.data,
+          context: data.context
         };
       } else {
         return {
@@ -286,6 +353,59 @@ const ChatBot: React.FC = () => {
       };
     }
   };
+
+  const handlePersonalizedRecommendations = async (): Promise<{ text: string; actions?: MessageAction[]; products?: Product[]; context?: any }> => {
+    if (!authContext?.user) {
+      return {
+        text: "I'd love to give you personalized recommendations! Please log in so I can learn your preferences and suggest products you'll love."
+      };
+    }
+
+    try {
+      const response = await fetch('/api/mcp/ai-recommendations?limit=3', {
+        headers: {
+          'Authorization': `Bearer ${authContext.token}`
+        }
+      });
+      const data = await response.json();
+
+      if (data.success && data.data.length > 0) {
+        const actions: MessageAction[] = data.data.flatMap((product: Product) => [
+          {
+            type: 'add_to_cart',
+            label: `Add ${product.title} to Cart`,
+            productId: product.id
+          },
+          {
+            type: 'add_to_wishlist',
+            label: `Add ${product.title} to Wishlist`,
+            productId: product.id
+          }
+        ]);
+
+        return {
+          text: "Based on your shopping history and preferences, here are some products I think you'll love:",
+          actions,
+          products: data.data
+        };
+      } else {
+        return {
+          text: "I'm still learning your preferences! Add some items to your wishlist or make a purchase so I can give you better recommendations."
+        };
+      }
+    } catch (error) {
+      return {
+        text: "I'm having trouble accessing your preferences right now. Try browsing our featured products!"
+      };
+    }
+  };
+  const handleAvailabilityCheck = async (query: string): Promise<{ text: string; actions?: MessageAction[]; products?: Product[] }> => {
+    // This is a simplified version - in a real implementation, you'd extract product names from the query
+    return {
+      text: "To check if a specific product is available, please tell me the exact product name or search for it first, and I'll check the current stock levels for you."
+    };
+  };
+
 
   const handleAction = async (action: MessageAction) => {
     if (!authContext?.user) {
@@ -448,6 +568,13 @@ const ChatBot: React.FC = () => {
                         ))}
                       </div>
                     )}
+
+                    {/* Context Information */}
+                    {message.context && (
+                      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <em>Search context: {JSON.stringify(message.context)}</em>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -473,7 +600,7 @@ const ChatBot: React.FC = () => {
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
-                  placeholder="Ask me to find products, check stock, or add to cart..."
+                  placeholder="Ask me anything about products, get recommendations..."
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   disabled={isLoading}
                 />

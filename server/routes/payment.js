@@ -1,8 +1,11 @@
 const express = require('express');
 const Razorpay = require('razorpay');
 const crypto = require('crypto');
+const QRCode = require('qrcode');
+const { v4: uuidv4 } = require('uuid');
 const { auth } = require('../middleware/auth');
 const Order = require('../models/Order');
+const Payment = require('../models/Payment');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const { getExchangeRate } = require('../utils/currency');
@@ -15,6 +18,158 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET || 'rzp_test_secret'
 });
 
+/**
+ * @route   POST /api/payment/generate-qr
+ * @desc    Generate QR code for payment
+ * @access  Private
+ */
+router.post('/generate-qr', auth, async (req, res) => {
+  try {
+    const { orderId, amount, currency = 'INR' } = req.body;
+
+    if (!orderId || !amount) {
+      return res.status(400).json({ message: 'Order ID and amount are required' });
+    }
+
+    const order = await Order.findById(orderId);
+    if (!order || order.user.toString() !== req.user.id) {
+      return res.status(404).json({ message: 'Order not found' });
+    }
+
+    // Generate unique payment ID
+    const paymentId = uuidv4();
+    
+    // Create payment record
+    const payment = new Payment({
+      user: req.user.id,
+      order: orderId,
+      paymentId,
+      amount: {
+        usd: currency === 'USD' ? amount : Math.round(amount / 83),
+        inr: currency === 'INR' ? amount : Math.round(amount * 83)
+      },
+      currency,
+      method: 'qr_code',
+      status: 'pending',
+      qrCode: {
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000) // 15 minutes
+      }
+    });
+
+    // Create UPI payment string
+    const upiString = `upi://pay?pa=modernstore@upi&pn=ModernStore&am=${payment.amount.inr}&cu=INR&tn=Payment for Order ${order._id}&tr=${paymentId}`;
+    
+    // Generate QR code
+    const qrCodeDataURL = await QRCode.toDataURL(upiString, {
+      width: 300,
+      margin: 2,
+      color: {
+        dark: '#000000',
+        light: '#FFFFFF'
+      }
+    });
+
+    payment.qrCode.data = qrCodeDataURL;
+    await payment.save();
+
+    // Add notification to user
+    const user = await User.findById(req.user.id);
+    user.notifications.push({
+      type: 'payment',
+      title: 'QR Code Generated',
+      message: `QR code generated for payment of ₹${payment.amount.inr}. Scan to pay within 15 minutes.`,
+      read: false
+    });
+    await user.save();
+
+    res.json({
+      success: true,
+      data: {
+        paymentId,
+        qrCode: qrCodeDataURL,
+        amount: payment.amount,
+        expiresAt: payment.qrCode.expiresAt,
+        upiString
+      }
+    });
+
+  } catch (error) {
+    console.error('Generate QR code error:', error);
+    res.status(500).json({ message: 'Failed to generate QR code' });
+  }
+});
+
+/**
+ * @route   POST /api/payment/verify-qr
+ * @desc    Verify QR code payment
+ * @access  Private
+ */
+router.post('/verify-qr', auth, async (req, res) => {
+  try {
+    const { paymentId, transactionId } = req.body;
+
+    if (!paymentId || !transactionId) {
+      return res.status(400).json({ message: 'Payment ID and transaction ID are required' });
+    }
+
+    const payment = await Payment.findOne({ paymentId, user: req.user.id });
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found' });
+    }
+
+    if (payment.qrCode.expiresAt < new Date()) {
+      return res.status(400).json({ message: 'QR code has expired' });
+    }
+
+    // Update payment status
+    payment.status = 'completed';
+    payment.metadata = new Map([['transactionId', transactionId]]);
+    await payment.save();
+
+    // Update order
+    const order = await Order.findById(payment.order);
+    order.isPaid = true;
+    order.paidAt = new Date();
+    order.status = 'processing';
+    order.paymentResult = {
+      id: transactionId,
+      status: 'completed',
+      update_time: new Date().toISOString()
+    };
+    await order.save();
+
+    // Update product stock
+    for (const item of order.items) {
+      await Product.findByIdAndUpdate(
+        item.product,
+        { $inc: { stock: -item.quantity } }
+      );
+    }
+
+    // Clear user's cart
+    await User.findByIdAndUpdate(req.user.id, { cart: [] });
+
+    // Add success notification
+    const user = await User.findById(req.user.id);
+    user.notifications.push({
+      type: 'payment',
+      title: 'Payment Successful',
+      message: `Payment of ₹${payment.amount.inr} completed successfully. Order #${order._id.toString().slice(-8)} is being processed.`,
+      read: false
+    });
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Payment verified successfully',
+      data: { order, payment }
+    });
+
+  } catch (error) {
+    console.error('Verify QR payment error:', error);
+    res.status(500).json({ message: 'Failed to verify payment' });
+  }
+});
 /**
  * @route   POST /api/payment/create-order
  * @desc    Create Razorpay order
@@ -114,6 +269,15 @@ router.post('/create-order', auth, async (req, res) => {
     };
     await order.save();
 
+    // Add order creation notification
+    const user = await User.findById(req.user.id);
+    user.notifications.push({
+      type: 'order',
+      title: 'Order Created',
+      message: `Your order #${order._id.toString().slice(-8)} has been created. Total: ₹${order.totalAmount.inr}`,
+      read: false
+    });
+    await user.save();
     res.json({
       success: true,
       data: {
@@ -180,6 +344,15 @@ router.post('/verify', auth, async (req, res) => {
     // Clear user's cart
     await User.findByIdAndUpdate(req.user.id, { cart: [] });
 
+    // Add payment success notification
+    const user = await User.findById(req.user.id);
+    user.notifications.push({
+      type: 'payment',
+      title: 'Payment Successful',
+      message: `Payment of ₹${order.totalAmount.inr} completed successfully. Order #${order._id.toString().slice(-8)} is being processed.`,
+      read: false
+    });
+    await user.save();
     res.json({
       success: true,
       message: 'Payment verified successfully',
@@ -387,6 +560,15 @@ router.post('/refund', auth, async (req, res) => {
       );
     }
 
+    // Add refund notification
+    const user = await User.findById(req.user.id);
+    user.notifications.push({
+      type: 'payment',
+      title: 'Refund Processed',
+      message: `Refund of ₹${order.totalAmount.inr} has been initiated for order #${order._id.toString().slice(-8)}.`,
+      read: false
+    });
+    await user.save();
     res.json({
       success: true,
       message: 'Refund initiated successfully',
