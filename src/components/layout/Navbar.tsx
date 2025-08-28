@@ -47,13 +47,13 @@ const Navbar: React.FC = () => {
                 </button>
                 <div className="absolute top-full left-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200 dark:border-gray-700">
                   {categories.map((category) => (
-                    <button
+                    <Link
                       key={category.id}
-                      onClick={() => handleCategoryClick(category.id)}
+                      to={`/category/${category.id}`}
                       className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg"
                     >
                       {category.name}
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>

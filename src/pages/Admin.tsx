@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   FiUsers,
   FiShoppingBag,
@@ -54,6 +55,7 @@ interface Order {
 
 const Admin: React.FC = () => {
   const authContext = useContext(AuthContext);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [loading, setLoading] = useState(true);
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
@@ -67,7 +69,8 @@ const Admin: React.FC = () => {
 
   useEffect(() => {
     if (!authContext?.user || authContext.user.role !== 'admin') {
-      toast.error('Unauthorized access');
+      // Don't show error, just redirect to login
+      navigate('/login');
       return;
     }
     
@@ -327,14 +330,32 @@ const Admin: React.FC = () => {
 
   if (!authContext?.user || authContext.user.role !== 'admin') {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-            Unauthorized Access
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
+            Admin Access Required
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            You don't have permission to access this page.
+            Please log in with an administrator account to access this panel.
           </p>
+          <div className="mt-8 space-y-4">
+            <button
+              onClick={async () => {
+                const success = await authContext?.login('admin@modernstore.com', 'admin123');
+                if (success) {
+                  toast.success('Logged in as Admin!');
+                  window.location.reload();
+                }
+              }}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center space-x-2 mx-auto"
+            >
+              <FiUserCheck className="h-5 w-5" />
+              <span>Quick Admin Login</span>
+            </button>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Demo credentials: admin@modernstore.com / admin123
+            </p>
+          </div>
         </div>
       </div>
     );

@@ -6,7 +6,7 @@ import { products, categories } from '../data/products';
 import { useWishlist } from '../contexts/WishlistContext';
 
 const Category: React.FC = () => {
-  const { categoryName } = useParams<{ categoryName: string }>();
+  const { category: categoryName } = useParams<{ category: string }>();
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const category = categories.find(c => c.id === categoryName);

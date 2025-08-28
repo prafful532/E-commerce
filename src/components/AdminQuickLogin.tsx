@@ -1,10 +1,12 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { FiUserCheck } from 'react-icons/fi';
 import toast from 'react-hot-toast';
 
 const AdminQuickLogin: React.FC = () => {
   const { login, user } = useAuth();
+  const location = useLocation();
 
   const handleAdminLogin = async () => {
     const success = await login('admin@modernstore.com', 'admin123');
@@ -13,7 +15,8 @@ const AdminQuickLogin: React.FC = () => {
     }
   };
 
-  if (user?.role === 'admin') {
+  // Only show on admin page or if user is not logged in and on admin page
+  if (user?.role === 'admin' || !location.pathname.includes('/admin')) {
     return null; // Don't show if already admin
   }
 
