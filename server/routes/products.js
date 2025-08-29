@@ -5,7 +5,7 @@ const router = express.Router()
 
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, pageSize = 10, search = '', category = '' } = req.query
+    const { page = 1, pageSize = 10, search = '', category = '', is_active } = req.query
     const p = Math.max(parseInt(page), 1)
     const ps = Math.max(parseInt(pageSize), 1)
 
