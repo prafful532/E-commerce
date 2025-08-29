@@ -119,14 +119,12 @@ const Navbar: React.FC = () => {
                       Profile
                     </Link>
                     {user.role === 'admin' && (
-                      <a
-                        href="/admin/index.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        to="/admin"
                         className="block px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 font-medium"
                       >
                         Admin Panel →
-                      </a>
+                      </Link>
                     )}
                     <button
                       onClick={logout}
