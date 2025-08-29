@@ -67,6 +67,10 @@ const Login: React.FC = () => {
             >
               create a new account
             </Link>
+            {' '}·{' '}
+            <a href="/admin/login" className="font-medium text-blue-600 hover:text-blue-500 dark:text-blue-400">
+              admin login
+            </a>
           </p>
         </div>
 
