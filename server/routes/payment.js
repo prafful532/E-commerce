@@ -52,4 +52,52 @@ router.post('/generate-qr', async (req, res) => {
   }
 })
 
+router.post('/razorpay/create-order', async (req, res) => {
+  try {
+    const { amount } = req.body || {}
+    const inr = Math.max(1, Math.round(Number(amount) || 0))
+    const key_id = process.env.RAZORPAY_KEY_ID
+    const key_secret = process.env.RAZORPAY_KEY_SECRET
+    if (!key_id || !key_secret) return res.json({ success: false, error: 'Razorpay not configured' })
+
+    const rp = new Razorpay({ key_id, key_secret })
+    const order = await rp.orders.create({ amount: inr * 100, currency: 'INR', receipt: 'rcpt_' + Date.now() })
+    res.json({ success: true, data: { order, key_id } })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Failed to create Razorpay order' })
+  }
+})
+
+router.post('/stripe/checkout', async (req, res) => {
+  try {
+    const { amount, successUrl, cancelUrl } = req.body || {}
+    const inr = Math.max(1, Math.round(Number(amount) || 0))
+    const secret = process.env.STRIPE_SECRET_KEY
+    if (!secret) return res.json({ success: false, error: 'Stripe not configured' })
+
+    const stripe = new Stripe(secret, { apiVersion: '2024-06-20' })
+    const origin = req.headers.origin || 'http://localhost:5173'
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'inr',
+            product_data: { name: 'Store Order' },
+            unit_amount: inr * 100,
+          },
+          quantity: 1,
+        },
+      ],
+      success_url: successUrl || `${origin}/checkout?paid=1`,
+      cancel_url: cancelUrl || `${origin}/checkout?canceled=1`,
+    })
+
+    res.json({ success: true, data: { url: session.url } })
+  } catch (e) {
+    res.status(500).json({ success: false, error: 'Failed to create Stripe session' })
+  }
+})
+
 export default router
