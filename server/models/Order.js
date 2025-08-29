@@ -1,7 +1,7 @@
 import mongoose from 'mongoose'
 
 const OrderSchema = new mongoose.Schema({
-  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: true, index: true },
+  user_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Profile', required: false, index: true },
   total_amount_usd: { type: Number, required: true },
   total_amount_inr: { type: Number, required: true },
   status: { type: String, enum: ['pending', 'processing', 'shipped', 'delivered', 'cancelled'], default: 'pending', index: true },
