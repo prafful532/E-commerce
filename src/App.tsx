@@ -22,6 +22,7 @@ import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import InvoiceQR from './pages/InvoiceQR';
+import AdminPortal from './pages/AdminPortal';
 
 function App() {
   return (
