@@ -2,6 +2,7 @@ import express from 'express'
 import crypto from 'crypto'
 import Order from '../models/Order.js'
 import { requireAuth } from '../middleware/auth.js'
+import QRCode from 'qrcode'
 
 const router = express.Router()
 
