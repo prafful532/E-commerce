@@ -8,15 +8,14 @@ const router = express.Router()
 
 router.post('/signup', async (req, res) => {
   try {
-    const { email, password, full_name, role = 'user' } = req.body
+    const { email, password, full_name } = req.body
     if (!email || !password) return res.status(400).json({ error: 'Email and password required' })
 
     const exists = await Profile.findOne({ email })
     if (exists) return res.status(400).json({ error: 'Email already registered' })
 
     const hash = await bcrypt.hash(password, 10)
-    const profile = await Profile.create({ email, full_name, role })
-    // Save password in separate collection is best; for demo attach hash
+    const profile = await Profile.create({ email, full_name, role: 'user' })
     profile.password_hash = hash
     await profile.save()
 
@@ -43,7 +42,7 @@ router.post('/login', async (req, res) => {
     if (!ok) return res.status(400).json({ error: 'Invalid credentials' })
 
     const token = jwt.sign({ id: profile._id, email: profile.email, role: profile.role }, secret, { expiresIn: '7d' })
-    res.json({ token, user: { id: profile._id, email: profile.email, full_name: profile.full_name, role: profile.role } })
+    res.json({ token, user: { id: profile._id, email: profile.email, full_name: profile.full_name || 'User', role: profile.role } })
   } catch (e) {
     res.status(500).json({ error: 'Login failed' })
   }
