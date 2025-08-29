@@ -22,11 +22,14 @@ router.get('/', async (req, res) => {
     const profiles = await Profile.find({ _id: { $in: userIds } }).lean()
     const map = new Map(profiles.map(p => [String(p._id), p]))
 
-    const data = raw.map(o => ({
-      id: String(o._id),
-      ...o,
-      profiles: map.get(String(o.user_id)) ? { full_name: map.get(String(map.get(String(o.user_id))?.full_name)), email: map.get(String(o.user_id))?.email } : undefined
-    }))
+    const data = raw.map(o => {
+      const prof = map.get(String(o.user_id))
+      return {
+        id: String(o._id),
+        ...o,
+        profiles: prof ? { full_name: prof.full_name, email: prof.email } : undefined
+      }
+    })
 
     res.json({ data, total })
   } catch (e) {
