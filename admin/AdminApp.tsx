@@ -10,6 +10,7 @@ import OrderManagement from './pages/OrderManagement';
 import UserManagement from './pages/UserManagement';
 import AdminLayout from './components/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
+import Settings from './pages/Settings';
 
 function AdminApp() {
   return (
@@ -44,6 +45,13 @@ function AdminApp() {
                 <ProtectedRoute>
                   <AdminLayout>
                     <UserManagement />
+                  </AdminLayout>
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/settings" element={
+                <ProtectedRoute>
+                  <AdminLayout>
+                    <Settings />
                   </AdminLayout>
                 </ProtectedRoute>
               } />
