@@ -55,6 +55,7 @@ async function start() {
     app.use('/api/profiles', profileRoutes)
     app.use('/api/orders', orderRoutes)
     app.use('/api/payment', paymentRoutes)
+    app.use('/api/admin', (await import('./routes/admin.js')).default)
 
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
   } catch (err) {

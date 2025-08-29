@@ -14,7 +14,7 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const { user, login } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -29,10 +29,14 @@ const AdminLogin: React.FC = () => {
 
     setLoading(true);
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
+      const { default: api } = await import('../../src/lib/api')
+      const { data } = await api.post('/admin/login', { email: formData.email, password: formData.password })
+      if (data?.success && data?.token) {
+        localStorage.setItem('admin_token', data.token)
         navigate('/admin', { replace: true });
       }
+    } catch (err: any) {
+      console.error(err)
     } finally {
       setLoading(false);
     }

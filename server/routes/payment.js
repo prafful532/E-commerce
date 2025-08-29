@@ -16,9 +16,10 @@ router.post('/create-order', async (req, res) => {
       user_id: req.user?.id || undefined,
       total_amount_usd: totalUsd ?? 0,
       total_amount_inr: totalInr ?? 0,
-      status: 'pending',
+      status: 'Placed',
       payment_status: 'pending',
       shipping_address: shippingAddress,
+      items: items.map((it) => ({ product_id: it.productId, quantity: it.quantity, size: it.size, color: it.color }))
     })
 
     res.json({ success: true, data: { order: { _id: String(order._id) } } })
