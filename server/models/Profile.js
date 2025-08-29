@@ -7,6 +7,7 @@ const ProfileSchema = new mongoose.Schema({
   role: { type: String, enum: ['user', 'admin'], default: 'user', index: true },
   phone: { type: String },
   address: { type: Object },
-}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } })
+  password_hash: { type: String },
+}, { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }, strict: true })
 
 export default mongoose.model('Profile', ProfileSchema)
