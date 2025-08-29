@@ -49,56 +49,42 @@ const Checkout: React.FC = () => {
 
   const generateQRCode = async () => {
     try {
-      // First create an order
-      const orderResponse = await fetch('/api/payment/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
-        body: JSON.stringify({
-          items: items.map(item => ({
-            productId: item.id,
-            quantity: item.quantity,
-            size: item.size,
-            color: item.color
-          })),
-          shippingAddress: shippingData,
-          currency: 'INR'
-        })
-      });
+      const { default: api } = await import('../lib/api')
+      const orderRes = await api.post('/payment/create-order', {
+        items: items.map(item => ({
+          productId: item.id,
+          quantity: item.quantity,
+          size: item.size,
+          color: item.color
+        })),
+        shippingAddress: shippingData,
+        currency: 'INR',
+        totalUsd: Number(finalTotal.toFixed(2)),
+        totalInr: Math.round(finalTotal * 83)
+      })
 
-      const orderData = await orderResponse.json();
-      if (!orderData.success) {
-        toast.error('Failed to create order');
-        return;
+      if (!orderRes.data?.success) {
+        toast.error('Failed to create order')
+        return
       }
 
-      // Generate QR code for the order
-      const qrResponse = await fetch('/api/payment/generate-qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
-        body: JSON.stringify({
-          orderId: orderData.data.order._id,
-          amount: Math.round(finalTotal * 83), // Convert to INR
-          currency: 'INR'
-        })
-      });
+      const orderId = orderRes.data.data.order._id
+      const qrRes = await api.post('/payment/generate-qr', {
+        orderId,
+        amount: Math.round(finalTotal * 83),
+        currency: 'INR'
+      })
 
-      const qrData = await qrResponse.json();
-      if (qrData.success) {
-        setQrCodeData(qrData.data);
-        setShowQRCode(true);
-        toast.success('QR Code generated! Scan to pay.');
+      if (qrRes.data?.success) {
+        setQrCodeData(qrRes.data.data)
+        setShowQRCode(true)
+        toast.success('QR Code generated! Scan to pay.')
       } else {
-        toast.error('Failed to generate QR code');
+        toast.error('Failed to generate QR code')
       }
     } catch (error) {
-      console.error('QR Code generation error:', error);
-      toast.error('Failed to generate QR code');
+      console.error('QR Code generation error:', error)
+      toast.error('Failed to generate QR code')
     }
   };
   const handleSubmit = async (e: React.FormEvent) => {
