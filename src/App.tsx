@@ -48,6 +48,7 @@ function App() {
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
                     <Route path="/invoice-qr" element={<InvoiceQR />} />
+                    <Route path="/admin/*" element={<AdminPortal />} />
                   </Routes>
                 </main>
                 <Footer />
