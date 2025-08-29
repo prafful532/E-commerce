@@ -87,9 +87,10 @@ const Checkout: React.FC = () => {
       } else {
         toast.error('Failed to generate QR code')
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('QR Code generation error:', error)
-      toast.error('Failed to generate QR code')
+      const msg = error?.response?.data?.error || error?.message || 'Failed to generate QR code'
+      toast.error(String(msg))
     }
   };
   const handleSubmit = async (e: React.FormEvent) => {
