@@ -19,7 +19,7 @@ router.post('/signup', async (req, res) => {
     profile.password_hash = hash
     await profile.save()
 
-    const secret = process.env.JWT_SECRET
+    const secret = process.env.JWT_SECRET || 'dev_secret'
     if (!secret) return res.status(500).json({ error: 'Server missing JWT secret' })
     const token = jwt.sign({ id: profile._id, email: profile.email, role: profile.role }, secret, { expiresIn: '7d' })
 
@@ -32,7 +32,7 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
-    const secret = process.env.JWT_SECRET
+    const secret = process.env.JWT_SECRET || 'dev_secret'
     if (!secret) return res.status(500).json({ error: 'Server missing JWT secret' })
 
     const profile = await Profile.findOne({ email })
