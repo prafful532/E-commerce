@@ -33,6 +33,8 @@ const AdminLogin: React.FC = () => {
       const { data } = await api.post('/admin/login', { email: formData.email, password: formData.password })
       if (data?.success && data?.token) {
         localStorage.setItem('admin_token', data.token)
+        localStorage.setItem('auth_token', data.token)
+        window.dispatchEvent(new Event('auth-changed'))
         navigate('/admin', { replace: true });
       }
     } catch (err: any) {
