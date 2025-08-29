@@ -69,10 +69,15 @@ const Checkout: React.FC = () => {
       }
 
       const orderId = orderRes.data.data.order._id
+      const vpa = (import.meta as any).env.VITE_UPI_VPA || undefined
+      const payeeName = (import.meta as any).env.VITE_UPI_PAYEE_NAME || undefined
       const qrRes = await api.post('/payment/generate-qr', {
         orderId,
         amount: Math.round(finalTotal * 83),
-        currency: 'INR'
+        currency: 'INR',
+        vpa,
+        payeeName,
+        note: `Checkout order ${orderId}`
       })
 
       if (qrRes.data?.success) {
