@@ -13,18 +13,19 @@ router.get('/', async (req, res) => {
     const filter = { }
     if (status) filter.status = status
 
-    const [items, total] = await Promise.all([
+    const [raw, total] = await Promise.all([
       Order.find(filter).sort({ created_at: -1 }).skip((p - 1) * ps).limit(ps).lean(),
       Order.countDocuments(filter)
     ])
 
-    const userIds = items.map(o => o.user_id)
+    const userIds = raw.map(o => o.user_id)
     const profiles = await Profile.find({ _id: { $in: userIds } }).lean()
     const map = new Map(profiles.map(p => [String(p._id), p]))
 
-    const data = items.map(o => ({
+    const data = raw.map(o => ({
+      id: String(o._id),
       ...o,
-      profiles: map.get(String(o.user_id)) ? { full_name: map.get(String(o.user_id)).full_name, email: map.get(String(o.user_id)).email } : undefined
+      profiles: map.get(String(o.user_id)) ? { full_name: map.get(String(map.get(String(o.user_id))?.full_name)), email: map.get(String(o.user_id))?.email } : undefined
     }))
 
     res.json({ data, total })
