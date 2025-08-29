@@ -8,7 +8,6 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import ChatBot from './components/ChatBot';
-import AdminQuickLogin from './components/AdminQuickLogin';
 import DemoModeIndicator from './components/DemoModeIndicator';
 import QuickHelp from './components/QuickHelp';
 import Home from './pages/Home';
@@ -22,7 +21,6 @@ import Wishlist from './pages/Wishlist';
 import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -47,12 +45,10 @@ function App() {
                     <Route path="/about" element={<About />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route path="/admin" element={<Admin />} />
                   </Routes>
                 </main>
                 <Footer />
                 <ChatBot />
-                <AdminQuickLogin />
                 <QuickHelp />
                 <Toaster 
                   position="top-right"
