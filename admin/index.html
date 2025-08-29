@@ -5,6 +5,33 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ModernStore Admin Panel</title>
+    <script>
+      (function () {
+        try {
+          var originalFetch = window.fetch ? window.fetch.bind(window) : null;
+          function isVitePing(u) {
+            try {
+              var url = new URL(typeof u === 'string' ? u : (u && u.url) || '', location.href);
+              if (url.pathname === '/__vite_ping') return true;
+              if (url.searchParams && url.searchParams.has('reload')) return true;
+            } catch (e) {}
+            return false;
+          }
+          if (originalFetch) {
+            window.fetch = function (input, init) {
+              if (isVitePing(input)) {
+                try {
+                  return originalFetch(input, init);
+                } catch (e) {
+                  return Promise.resolve(new Response('', { status: 200 }));
+                }
+              }
+              return originalFetch(input, init);
+            };
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="admin-root"></div>
