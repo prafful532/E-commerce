@@ -45,6 +45,7 @@ function App() {
                     <Route path="/about" element={<About />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/invoice-qr" element={React.createElement(require('./pages/InvoiceQR').default)} />
                   </Routes>
                 </main>
                 <Footer />
