@@ -18,11 +18,11 @@ router.get('/', async (req, res) => {
       ]
     }
 
-    const [items, total] = await Promise.all([
-      Profile.find(filter).sort({ created_at: -1 }).skip((p - 1) * ps).limit(ps),
+    const [raw, total] = await Promise.all([
+      Profile.find(filter).sort({ created_at: -1 }).skip((p - 1) * ps).limit(ps).lean(),
       Profile.countDocuments(filter)
     ])
-
+    const items = raw.map(u => ({ id: String(u._id), ...u }))
     res.json({ data: items, total })
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch users' })
