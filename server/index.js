@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.js'
 import productRoutes from './routes/products.js'
 import profileRoutes from './routes/profiles.js'
 import orderRoutes from './routes/orders.js'
+import paymentRoutes from './routes/payment.js'
 
 dotenv.config()
 
