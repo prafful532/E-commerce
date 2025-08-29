@@ -11,6 +11,7 @@ router.get('/', async (req, res) => {
 
     const filter = { }
     if (category) filter.category = category
+    if (typeof is_active !== 'undefined') filter.is_active = String(is_active) === 'true'
     if (search) {
       filter.$or = [
         { title: { $regex: search, $options: 'i' } },
