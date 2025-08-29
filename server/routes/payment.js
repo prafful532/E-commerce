@@ -3,6 +3,8 @@ import crypto from 'crypto'
 import Order from '../models/Order.js'
 import { requireAuth } from '../middleware/auth.js'
 import QRCode from 'qrcode'
+import Razorpay from 'razorpay'
+import Stripe from 'stripe'
 
 const router = express.Router()
 
