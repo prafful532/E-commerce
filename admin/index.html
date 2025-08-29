@@ -31,6 +31,30 @@
           }
         } catch (e) {}
       })();
+
+      // Bridge: notify parent about route changes and accept parent route updates
+      (function () {
+        function postPath() {
+          try {
+            var path = (location.hash || '').replace(/^#/, '') || '/admin';
+            if (window.parent) {
+              window.parent.postMessage({ type: 'admin-route', path: path }, location.origin);
+            }
+          } catch (e) {}
+        }
+        window.addEventListener('hashchange', postPath);
+        document.addEventListener('DOMContentLoaded', postPath);
+        window.addEventListener('message', function (event) {
+          if (!event || !event.data) return;
+          var data = event.data || {};
+          if (data.type === 'set-admin-route' && typeof data.path === 'string') {
+            var desired = data.path.startsWith('#') ? data.path : '#' + data.path;
+            if (location.hash !== desired) {
+              location.hash = desired;
+            }
+          }
+        });
+      })();
     </script>
   </head>
   <body>
