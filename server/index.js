@@ -23,6 +23,11 @@ app.use(cors())
 app.use(express.json({ limit: '2mb' }))
 app.use(morgan('dev'))
 
+// Respond to Vite client ping to avoid fetch failures in some environments
+app.get('/__vite_ping', (_req, res) => {
+  res.status(200).set('Cache-Control', 'no-store').end()
+})
+
 if (!mongoUri) {
   console.error('MONGODB_URI not set')
   process.exit(1)
