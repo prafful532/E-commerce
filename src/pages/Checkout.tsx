@@ -93,22 +93,77 @@ const Checkout: React.FC = () => {
       toast.error(String(msg))
     }
   };
+  const loadScript = (src: string) => new Promise((resolve, reject) => {
+    const s = document.createElement('script')
+    s.src = src
+    s.onload = resolve
+    s.onerror = reject
+    document.body.appendChild(s)
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const inrAmount = Math.round(finalTotal * 83)
+
     if (paymentMethod === 'qr_code') {
       await generateQRCode();
-    } else {
-      // Simulate payment processing
-      toast.loading('Processing payment...');
-      
-      setTimeout(() => {
-        toast.dismiss();
-        toast.success('Order placed successfully!');
-        clearCart();
-        // In a real app, redirect to order confirmation
-      }, 2000);
+      return
     }
+
+    if (paymentMethod === 'razorpay') {
+      try {
+        const { default: api } = await import('../lib/api')
+        const { data } = await api.post('/payment/razorpay/create-order', { amount: inrAmount })
+        if (!data?.success) { toast.error(data?.error || 'Razorpay order failed'); return }
+        const { order, key_id } = data.data
+        await loadScript('https://checkout.razorpay.com/v1/checkout.js')
+        // @ts-ignore
+        const rzp = new window.Razorpay({
+          key: key_id,
+          amount: order.amount,
+          currency: order.currency,
+          order_id: order.id,
+          name: 'Store Checkout',
+          description: 'Order Payment',
+          handler: function () {
+            toast.success('Payment successful!')
+            clearCart()
+          },
+          prefill: { name: `${shippingData.firstName} ${shippingData.lastName}`, email: shippingData.email, contact: shippingData.phone },
+          notes: { address: shippingData.address },
+          theme: { color: '#3399cc' }
+        })
+        rzp.open()
+      } catch (err: any) {
+        console.error(err)
+        toast.error(err?.response?.data?.error || 'Razorpay failed')
+      }
+      return
+    }
+
+    if (paymentMethod === 'card' || paymentMethod === 'stripe') {
+      try {
+        const { default: api } = await import('../lib/api')
+        const { data } = await api.post('/payment/stripe/checkout', { amount: inrAmount, successUrl: window.location.origin + '/checkout?paid=1', cancelUrl: window.location.href })
+        if (data?.success && data.data?.url) {
+          window.location.href = data.data.url
+        } else {
+          toast.error(data?.error || 'Stripe session failed')
+        }
+      } catch (err: any) {
+        console.error(err)
+        toast.error(err?.response?.data?.error || 'Stripe failed')
+      }
+      return
+    }
+
+    toast.loading('Processing payment...');
+    setTimeout(() => {
+      toast.dismiss();
+      toast.success('Order placed successfully!');
+      clearCart();
+    }, 2000);
   };
 
   const paymentMethods = [
