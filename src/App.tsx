@@ -21,6 +21,7 @@ import Wishlist from './pages/Wishlist';
 import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import InvoiceQR from './pages/InvoiceQR';
 
 function App() {
   return (
