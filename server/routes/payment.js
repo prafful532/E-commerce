@@ -27,17 +27,21 @@ router.post('/create-order', async (req, res) => {
 
 router.post('/generate-qr', async (req, res) => {
   try {
-    const { orderId, amount = 0, currency = 'INR' } = req.body || {}
+    const { orderId, amount = 0, currency = 'INR', vpa, payeeName, note } = req.body || {}
     if (!orderId) return res.status(400).json({ success: false, error: 'orderId required' })
 
-    const paymentId = 'pay_' + crypto.randomBytes(6).toString('hex')
     const inr = Math.round(amount)
+    const pa = vpa || process.env.UPI_VPA
+    const pn = payeeName || process.env.UPI_PAYEE_NAME || 'Merchant'
+    if (!pa) return res.status(400).json({ success: false, error: 'UPI VPA not configured' })
 
-    const info = `ORDER:${orderId}|AMOUNT:${inr}|CUR:${currency}`
-    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='512' height='512'><rect width='100%' height='100%' fill='white'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='monospace' font-size='16' fill='black'>${info}</text><rect x='24' y='24' width='64' height='64' fill='black'/><rect x='424' y='24' width='64' height='64' fill='black'/><rect x='24' y='424' width='64' height='64' fill='black'/><rect x='424' y='424' width='64' height='64' fill='black'/></svg>`
-    const qrCode = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`
+    const params = new URLSearchParams({ pa, pn, am: String(inr), tn: note || `Order ${orderId}`, cu: 'INR', tr: String(orderId) })
+    const upiLink = `upi://pay?${params.toString()}`
 
-    res.json({ success: true, data: { qrCode, amount: { inr }, paymentId } })
+    const qrCode = await QRCode.toDataURL(upiLink, { errorCorrectionLevel: 'M', margin: 1, width: 512 })
+    const paymentId = 'pay_' + crypto.randomBytes(6).toString('hex')
+
+    res.json({ success: true, data: { qrCode, amount: { inr }, paymentId, upiLink } })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Failed to generate QR' })
   }
