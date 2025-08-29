@@ -9,6 +9,8 @@ import productRoutes from './routes/products.js'
 import profileRoutes from './routes/profiles.js'
 import orderRoutes from './routes/orders.js'
 import paymentRoutes from './routes/payment.js'
+import Profile from './models/Profile.js'
+import bcrypt from 'bcryptjs'
 
 dotenv.config()
 
@@ -32,6 +34,18 @@ async function start() {
     const connOptions = dbName ? { dbName } : undefined
     await mongoose.connect(mongoUri, connOptions)
     console.log('Connected to MongoDB')
+
+    // Seed admin user if not exists
+    const email = process.env.ADMIN_EMAIL
+    const password = process.env.ADMIN_PASSWORD
+    if (email && password) {
+      const existing = await Profile.findOne({ email })
+      if (!existing) {
+        const hash = await bcrypt.hash(password, 10)
+        await Profile.create({ email, full_name: 'Administrator', role: 'admin', password_hash: hash })
+        console.log('Admin user seeded')
+      }
+    }
 
     app.get('/api/health', (_req, res) => {
       res.json({ ok: true })
