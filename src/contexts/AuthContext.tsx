@@ -1,5 +1,5 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useSupabaseAuth } from '../hooks/useSupabaseAuth';
+import { useAuth as useAuthHook } from '../hooks/useAuth';
 
 interface User {
   id: string;
@@ -35,40 +35,26 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { user: supabaseUser, profile, loading, signIn, signUp, signOut, updateProfile: updateSupabaseProfile } = useSupabaseAuth();
+  const { user: authUser, loading, signIn, signUp, signOut, updateProfile: updateApiProfile } = useAuthHook();
 
-  // Transform Supabase user to our User interface
-  const user: User | null = supabaseUser && profile ? {
-    id: supabaseUser.id,
-    email: supabaseUser.email!,
-    name: profile.full_name || 'User',
-    role: profile.role,
-    avatar: profile.avatar_url || undefined,
-    phone: profile.phone || undefined,
-    address: profile.address || undefined,
+  const user: User | null = authUser ? {
+    id: authUser.id,
+    email: authUser.email,
+    name: authUser.full_name || 'User',
+    role: authUser.role,
   } : null;
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    return await signIn(email, password);
-  };
+  const login = async (email: string, password: string): Promise<boolean> => signIn(email, password);
 
-  const register = async (name: string, email: string, password: string, role: 'user' | 'admin' = 'user'): Promise<boolean> => {
-    return await signUp(email, password, name, role);
-  };
+  const register = async (name: string, email: string, password: string, role: 'user' | 'admin' = 'user'): Promise<boolean> => signUp(email, password, name, role);
 
-  const logout = async (): Promise<void> => {
-    await signOut();
-  };
+  const logout = async (): Promise<void> => { await signOut(); };
 
   const updateProfile = async (userData: Partial<User>): Promise<boolean> => {
     const updates: any = {};
     if (userData.name) updates.full_name = userData.name;
-    if (userData.avatar) updates.avatar_url = userData.avatar;
-    if (userData.phone) updates.phone = userData.phone;
-    if (userData.address) updates.address = userData.address;
     if (userData.role) updates.role = userData.role;
-
-    return await updateSupabaseProfile(updates);
+    return await updateApiProfile(updates);
   };
 
   const value: AuthContextType = {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiPlus, FiEdit3, FiTrash2, FiSearch, FiFilter } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { supabase } from '../../src/lib/supabase';
+import api from '../../src/lib/api';
 import LoadingSpinner from '../../src/components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -37,30 +37,12 @@ const ProductManagement: React.FC = () => {
     try {
       setLoading(true);
 
-      let query = supabase
-        .from('products')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-
-      if (searchQuery) {
-        query = query.or(`title.ilike.%${searchQuery}%,brand.ilike.%${searchQuery}%,sku.ilike.%${searchQuery}%`);
-      }
-
-      if (selectedCategory) {
-        query = query.eq('category', selectedCategory);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error('Error fetching products:', error);
-        toast.error('Failed to fetch products');
-        return;
-      }
-
-      setProducts(data || []);
-      setTotalPages(Math.ceil((count || 0) / itemsPerPage));
+      const params: any = { page: currentPage, pageSize: itemsPerPage }
+      if (searchQuery) params.search = searchQuery
+      if (selectedCategory) params.category = selectedCategory
+      const { data } = await api.get('/products', { params })
+      setProducts(data.data || [])
+      setTotalPages(Math.ceil((data.total || 0) / itemsPerPage))
 
     } catch (error) {
       console.error('Error fetching products:', error);
@@ -74,18 +56,9 @@ const ProductManagement: React.FC = () => {
     if (!confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const { error } = await supabase
-        .from('products')
-        .update({ is_active: false })
-        .eq('id', productId);
-
-      if (error) {
-        toast.error('Failed to delete product');
-        return;
-      }
-
-      toast.success('Product deleted successfully');
-      fetchProducts();
+      await api.patch(`/products/${productId}`, { is_active: false })
+      toast.success('Product deleted successfully')
+      fetchProducts()
     } catch (error) {
       console.error('Error deleting product:', error);
       toast.error('Failed to delete product');

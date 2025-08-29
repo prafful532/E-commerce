@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiUsers, FiShoppingBag, FiPackage, FiDollarSign, FiTrendingUp, FiTrendingDown } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { supabase } from '../../src/lib/supabase';
+import api from '../../src/lib/api';
 import LoadingSpinner from '../../src/components/ui/LoadingSpinner';
 
 interface DashboardStats {
@@ -26,41 +26,28 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
 
       // Fetch dashboard statistics
-      const [
-        { count: totalProducts },
-        { count: totalUsers },
-        { count: totalOrders },
-        { data: recentOrders },
-        { data: topProducts }
-      ] = await Promise.all([
-        supabase.from('products').select('*', { count: 'exact', head: true }).eq('is_active', true),
-        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'user'),
-        supabase.from('orders').select('*', { count: 'exact', head: true }),
-        supabase.from('orders')
-          .select(`
-            *,
-            profiles!orders_user_id_fkey(full_name, email)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(5),
-        supabase.from('products')
-          .select('title, rating_average, rating_count, price_inr, category')
-          .eq('is_active', true)
-          .order('rating_average', { ascending: false })
-          .limit(5)
-      ]);
+      const [productsRes, usersRes, ordersRes] = await Promise.all([
+        api.get('/products', { params: { page: 1, pageSize: 1, is_active: true } }),
+        api.get('/profiles', { params: { page: 1, pageSize: 1, role: 'user' } }),
+        api.get('/orders', { params: { page: 1, pageSize: 1 } }),
+      ])
+      const totalProducts = productsRes.data.total || 0
+      const totalUsers = usersRes.data.total || 0
+      const totalOrders = ordersRes.data.total || 0
 
-      // Calculate total revenue (mock calculation)
-      const totalRevenue = (totalOrders || 0) * 2500; // Average order value
+      const recentOrders = (await api.get('/orders', { params: { page: 1, pageSize: 5 } })).data.data || []
+      const topProducts = (await api.get('/products', { params: { page: 1, pageSize: 5 } })).data.data || []
+
+      const totalRevenue = (totalOrders || 0) * 2500
 
       setStats({
-        totalProducts: totalProducts || 0,
-        totalUsers: totalUsers || 0,
-        totalOrders: totalOrders || 0,
+        totalProducts,
+        totalUsers,
+        totalOrders,
         totalRevenue,
-        recentOrders: recentOrders || [],
-        topProducts: topProducts || []
-      });
+        recentOrders,
+        topProducts,
+      })
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);

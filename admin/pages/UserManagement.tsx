@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiSearch, FiEdit3, FiTrash2, FiMail, FiPhone } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { supabase } from '../../src/lib/supabase';
+import api from '../../src/lib/api';
 import LoadingSpinner from '../../src/components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -32,30 +32,12 @@ const UserManagement: React.FC = () => {
     try {
       setLoading(true);
 
-      let query = supabase
-        .from('profiles')
-        .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-
-      if (searchQuery) {
-        query = query.or(`full_name.ilike.%${searchQuery}%,email.ilike.%${searchQuery}%`);
-      }
-
-      if (selectedRole) {
-        query = query.eq('role', selectedRole);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error('Error fetching users:', error);
-        toast.error('Failed to fetch users');
-        return;
-      }
-
-      setUsers(data || []);
-      setTotalPages(Math.ceil((count || 0) / itemsPerPage));
+      const params: any = { page: currentPage, pageSize: itemsPerPage }
+      if (searchQuery) params.search = searchQuery
+      if (selectedRole) params.role = selectedRole
+      const { data } = await api.get('/profiles', { params })
+      setUsers(data.data || [])
+      setTotalPages(Math.ceil((data.total || 0) / itemsPerPage))
 
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -67,21 +49,9 @@ const UserManagement: React.FC = () => {
 
   const updateUserRole = async (userId: string, newRole: 'user' | 'admin') => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          role: newRole,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId);
-
-      if (error) {
-        toast.error('Failed to update user role');
-        return;
-      }
-
-      toast.success('User role updated successfully');
-      fetchUsers();
+      await api.patch(`/profiles/${userId}`, { role: newRole })
+      toast.success('User role updated successfully')
+      fetchUsers()
     } catch (error) {
       console.error('Error updating user role:', error);
       toast.error('Failed to update user role');

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FiEye, FiPackage } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { supabase } from '../../src/lib/supabase';
+import api from '../../src/lib/api';
 import LoadingSpinner from '../../src/components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
 
@@ -36,29 +36,11 @@ const OrderManagement: React.FC = () => {
     try {
       setLoading(true);
 
-      let query = supabase
-        .from('orders')
-        .select(`
-          *,
-          profiles!orders_user_id_fkey(full_name, email)
-        `, { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-
-      if (selectedStatus) {
-        query = query.eq('status', selectedStatus);
-      }
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error('Error fetching orders:', error);
-        toast.error('Failed to fetch orders');
-        return;
-      }
-
-      setOrders(data || []);
-      setTotalPages(Math.ceil((count || 0) / itemsPerPage));
+      const params: any = { page: currentPage, pageSize: itemsPerPage }
+      if (selectedStatus) params.status = selectedStatus
+      const { data } = await api.get('/orders', { params })
+      setOrders(data.data || [])
+      setTotalPages(Math.ceil((data.total || 0) / itemsPerPage))
 
     } catch (error) {
       console.error('Error fetching orders:', error);
@@ -70,21 +52,9 @@ const OrderManagement: React.FC = () => {
 
   const updateOrderStatus = async (orderId: string, status: string) => {
     try {
-      const { error } = await supabase
-        .from('orders')
-        .update({ 
-          status,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', orderId);
-
-      if (error) {
-        toast.error('Failed to update order status');
-        return;
-      }
-
-      toast.success('Order status updated successfully');
-      fetchOrders();
+      await api.patch(`/orders/${orderId}`, { status })
+      toast.success('Order status updated successfully')
+      fetchOrders()
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
