@@ -15,6 +15,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     const fetchMe = () => {
+      setLoading(true)
       const token = localStorage.getItem('admin_token') || localStorage.getItem('auth_token')
       if (!token) { setUser(null); setLoading(false); return }
       api.get('/auth/me').then(r => {
