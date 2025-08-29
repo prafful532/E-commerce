@@ -19,11 +19,11 @@ router.get('/', async (req, res) => {
       ]
     }
 
-    const [items, total] = await Promise.all([
-      Product.find(filter).sort({ created_at: -1 }).skip((p - 1) * ps).limit(ps),
+    const [raw, total] = await Promise.all([
+      Product.find(filter).sort({ created_at: -1 }).skip((p - 1) * ps).limit(ps).lean(),
       Product.countDocuments(filter)
     ])
-
+    const items = raw.map(p => ({ id: String(p._id), ...p }))
     res.json({ data: items, total })
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch products' })
