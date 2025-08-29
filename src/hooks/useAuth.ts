@@ -14,13 +14,25 @@ export const useAuth = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const token = localStorage.getItem('auth_token')
-    if (!token) { setLoading(false); return }
-    api.get('/auth/me').then(r => {
-      setUser(r.data.user)
-    }).catch(() => {
-      localStorage.removeItem('auth_token')
-    }).finally(() => setLoading(false))
+    const fetchMe = () => {
+      const token = localStorage.getItem('admin_token') || localStorage.getItem('auth_token')
+      if (!token) { setUser(null); setLoading(false); return }
+      api.get('/auth/me').then(r => {
+        setUser(r.data.user)
+      }).catch(() => {
+        localStorage.removeItem('auth_token')
+        localStorage.removeItem('admin_token')
+        setUser(null)
+      }).finally(() => setLoading(false))
+    }
+    fetchMe()
+    const onAuthChanged = () => fetchMe()
+    window.addEventListener('auth-changed', onAuthChanged as any)
+    window.addEventListener('storage', onAuthChanged)
+    return () => {
+      window.removeEventListener('auth-changed', onAuthChanged as any)
+      window.removeEventListener('storage', onAuthChanged)
+    }
   }, [])
 
   const signUp = async (email: string, password: string, fullName: string, role: 'user' | 'admin' = 'user') => {
@@ -57,7 +69,9 @@ export const useAuth = () => {
 
   const signOut = async () => {
     localStorage.removeItem('auth_token')
+    localStorage.removeItem('admin_token')
     setUser(null)
+    window.dispatchEvent(new Event('auth-changed'))
     toast.success('Signed out successfully!')
   }
 
