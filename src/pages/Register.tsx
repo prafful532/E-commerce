@@ -10,8 +10,7 @@ const Register: React.FC = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: 'user' as 'user' | 'admin'
+    confirmPassword: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -27,7 +26,7 @@ const Register: React.FC = () => {
     }
   }, [user, navigate]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -81,8 +80,7 @@ const Register: React.FC = () => {
       const success = await register(
         formData.name,
         formData.email,
-        formData.password,
-        formData.role
+        formData.password
       );
       if (success) {
         navigate('/', { replace: true });
@@ -174,21 +172,6 @@ const Register: React.FC = () => {
               )}
             </div>
 
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Account Type
-              </label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800"
-              >
-                <option value="user">Customer</option>
-                <option value="admin">Administrator</option>
-              </select>
-            </div>
 
             <div>
               <label htmlFor="password" className="sr-only">
