@@ -3,7 +3,7 @@ import cors from 'cors'
 import morgan from 'morgan'
 import helmet from 'helmet'
 import mongoose from 'mongoose'
-import dotenv from 'dotenv'
+import 'dotenv/config'
 import authRoutes from './routes/auth.js'
 import productRoutes from './routes/products.js'
 import profileRoutes from './routes/profiles.js'
@@ -12,7 +12,6 @@ import paymentRoutes from './routes/payment.js'
 import Profile from './models/Profile.js'
 import bcrypt from 'bcryptjs'
 
-dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
