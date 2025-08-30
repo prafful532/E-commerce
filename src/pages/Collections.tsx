@@ -210,9 +210,9 @@ const Collections: React.FC = () => {
                     className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">All Categories</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
+                    {derivedCategories.map((cat) => (
+                      <option key={cat} value={cat} className="capitalize">
+                        {cat}
                       </option>
                     ))}
                   </select>
@@ -229,7 +229,7 @@ const Collections: React.FC = () => {
                     className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="">All Brands</option>
-                    {brands.map((brand) => (
+                    {derivedBrands.map((brand) => (
                       <option key={brand} value={brand}>
                         {brand}
                       </option>
@@ -343,9 +343,13 @@ const Collections: React.FC = () => {
                 ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'
                 : 'space-y-4'
             }`}>
-              {filteredAndSortedProducts.map((product, index) => (
-                <ProductCard key={product.id} product={product} index={index} />
-              ))}
+              {loading ? (
+                <div className="col-span-full text-center text-gray-500 dark:text-gray-400">Loading...</div>
+              ) : (
+                filteredAndSortedProducts.map((product, index) => (
+                  <ProductCard key={product.id} product={product} index={index} />
+                ))
+              )}
             </div>
 
             {filteredAndSortedProducts.length === 0 && (
