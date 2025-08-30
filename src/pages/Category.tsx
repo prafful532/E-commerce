@@ -6,8 +6,8 @@ import api from '../lib/api';
 import bus from '../lib/events';
 import { useWishlist } from '../contexts/WishlistContext';
 
-const Category: React.FC = () => {
-  const { category: categoryName } = useParams<{ category: string }>();
+const Category = () => {
+  const { category: categoryName } = useParams();
   const { addToWishlist, isInWishlist } = useWishlist();
 
   const [categoryProducts, setProducts] = React.useState<any[]>([])

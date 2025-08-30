@@ -6,7 +6,7 @@ import api from '../lib/api';
 import bus from '../lib/events';
 import { useWishlist } from '../contexts/WishlistContext';
 
-const Collections: React.FC = () => {
+const Collections = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState('name');
   const [filters, setFilters] = useState({

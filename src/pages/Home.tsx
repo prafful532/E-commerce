@@ -15,7 +15,7 @@ const mapProduct = (p: any) => ({
   rating: { rate: Number(p.rating_average || 0), count: Number(p.rating_count || 0) },
 })
 
-const Home: React.FC = () => {
+const Home = () => {
   const [featuredProducts, setFeatured] = React.useState<any[]>([])
   const [trendingProducts, setTrending] = React.useState<any[]>([])
   const [newProducts, setNew] = React.useState<any[]>([])

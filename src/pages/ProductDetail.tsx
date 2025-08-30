@@ -23,8 +23,8 @@ const map = (p: any) => ({
   rating: { rate: Number(p.rating_average || 0), count: Number(p.rating_count || 0) }
 })
 
-const ProductDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+const ProductDetail = () => {
+  const { id } = useParams();
   const [product, setProduct] = useState<any | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');

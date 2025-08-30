@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 const BASE = '/admin'
 
-const AdminPortal: React.FC = () => {
+const AdminPortal = () => {
   const location = useLocation()
   const navigate = useNavigate()
-  const iframeRef = useRef<HTMLIFrameElement | null>(null)
+  const iframeRef = useRef(null)
 
   const pathInAdmin = useMemo(() => {
     const p = location.pathname.startsWith(BASE) ? location.pathname : BASE

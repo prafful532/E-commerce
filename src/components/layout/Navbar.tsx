@@ -10,7 +10,7 @@ import SearchModal from '../ui/SearchModal';
 import api from '../../lib/api';
 import bus from '../../lib/events';
 
-const Navbar: React.FC = () => {
+const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const { totalItems } = useCart();

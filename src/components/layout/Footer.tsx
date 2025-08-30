@@ -4,7 +4,7 @@ import { FiMail, FiFacebook, FiTwitter, FiInstagram, FiYoutube } from 'react-ico
 import { HiOutlineShoppingBag } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
-const Footer: React.FC = () => {
+const Footer = () => {
   const [email, setEmail] = useState('');
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
