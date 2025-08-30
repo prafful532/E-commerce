@@ -5,6 +5,7 @@ import Profile from '../models/Profile.js'
 import Product from '../models/Product.js'
 import Order from '../models/Order.js'
 import { adminAuth } from '../middleware/adminAuth.js'
+import { broadcast } from '../events.js'
 
 const router = express.Router()
 
@@ -70,6 +71,7 @@ router.post('/products', adminAuth, async (req, res) => {
     const body = req.body || {}
     const prod = await Product.create(body)
     res.json({ success: true, data: prod })
+    broadcast('products.updated', { id: String(prod._id) })
   } catch (e) {
     res.status(500).json({ error: 'Failed to create product' })
   }
@@ -81,6 +83,7 @@ router.put('/products/:id', adminAuth, async (req, res) => {
     const body = req.body || {}
     const prod = await Product.findByIdAndUpdate(id, body, { new: true })
     res.json({ success: true, data: prod })
+    if (prod) broadcast('products.updated', { id: String(prod._id) })
   } catch (e) {
     res.status(500).json({ error: 'Failed to update product' })
   }
@@ -91,6 +94,7 @@ router.delete('/products/:id', adminAuth, async (req, res) => {
     const { id } = req.params
     await Product.findByIdAndDelete(id)
     res.json({ success: true })
+    broadcast('products.updated', { id })
   } catch (e) {
     res.status(500).json({ error: 'Failed to delete product' })
   }
@@ -126,6 +130,7 @@ router.put('/orders/:id/status', adminAuth, async (req, res) => {
     if (!ALLOWED_STATUSES.includes(status)) return res.status(400).json({ error: 'Invalid status' })
     await Order.findByIdAndUpdate(id, { status, updated_at: new Date().toISOString() })
     res.json({ success: true })
+    broadcast('orders.updated', { id })
   } catch (e) {
     res.status(500).json({ error: 'Failed to update status' })
   }
