@@ -19,16 +19,16 @@ const Navbar = () => {
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
-  const [cats, setCats] = useState<{id:string;name:string}[]>([])
+  const [cats, setCats] = useState([])
 
   React.useEffect(() => {
-    const load = () => api.get('/products/categories').then(r => setCats((r.data.data||[]).map((c:any)=>({id:String(c.id), name:c.name}))))
+    const load = () => api.get('/products/categories').then(r => setCats((r.data.data||[]).map((c)=>({id:String(c.id), name:c.name}))))
     load()
     const off = bus.on('products.updated', load)
     return () => { off && off() }
   }, [])
 
-  const handleCategoryClick = (categoryId: string) => {
+  const handleCategoryClick = (categoryId) => {
     navigate(`/category/${categoryId}`);
     setIsMenuOpen(false);
   };
