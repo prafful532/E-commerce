@@ -91,7 +91,7 @@ const Collections: React.FC = () => {
       category: '',
       brand: '',
       minPrice: 0,
-      maxPrice: 1000,
+      maxPrice: 9999999,
       rating: 0,
     });
   };
