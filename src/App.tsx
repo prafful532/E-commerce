@@ -5,15 +5,15 @@ import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
 import { ThemeProvider } from './contexts/ThemeContext';
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
+import Navbar from './components/layout/Navbar.jsx';
+import Footer from './components/layout/Footer.jsx';
 import ChatBot from './components/ChatBot';
 import DemoModeIndicator from './components/DemoModeIndicator';
 import QuickHelp from './components/QuickHelp';
-import Home from './pages/Home';
-import Collections from './pages/Collections';
-import ProductDetail from './pages/ProductDetail';
-import Category from './pages/Category';
+import Home from './pages/Home.jsx';
+import Collections from './pages/Collections.jsx';
+import ProductDetail from './pages/ProductDetail.jsx';
+import Category from './pages/Category.jsx';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Profile from './pages/Profile';
@@ -22,7 +22,7 @@ import About from './pages/About';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import InvoiceQR from './pages/InvoiceQR';
-import AdminPortal from './pages/AdminPortal';
+import AdminPortal from './pages/AdminPortal.jsx';
 
 function App() {
   return (
