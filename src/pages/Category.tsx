@@ -1,21 +1,36 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { FiStar, FiHeart } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { products, categories } from '../data/products';
+import api from '../lib/api';
+import bus from '../lib/events';
 import { useWishlist } from '../contexts/WishlistContext';
 
 const Category: React.FC = () => {
   const { category: categoryName } = useParams<{ category: string }>();
   const { addToWishlist, isInWishlist } = useWishlist();
 
-  const category = categories.find(c => c.id === categoryName);
-  const categoryProducts = useMemo(() => 
-    products.filter(product => product.category === categoryName),
-    [categoryName]
-  );
+  const [categoryProducts, setProducts] = React.useState<any[]>([])
+  const [categoryTitle, setCategoryTitle] = React.useState<string>('')
 
-  if (!category) {
+  const load = React.useCallback(() => {
+    if (!categoryName) return
+    api.get('/products', { params: { page: 1, pageSize: 200, is_active: true, category: categoryName } }).then(r => {
+      const mapped = (r.data.data || []).map((p:any)=>({
+        id: String(p.id), title: p.title, description: p.description || '',
+        image: p.image_url || (p.images && p.images[0]) || 'https://via.placeholder.com/600x600?text=Product',
+        brand: p.brand || 'Brand', price: Number(p.price_inr), originalPrice: p.original_price_inr ? Number(p.original_price_inr) : undefined,
+        rating: { rate: Number(p.rating_average||0), count: Number(p.rating_count||0) }, category: p.category || 'general'
+      }))
+      setProducts(mapped)
+      setCategoryTitle(categoryName)
+    })
+  }, [categoryName])
+
+  React.useEffect(()=>{ load() }, [load])
+  React.useEffect(()=> bus.on('products.updated', load), [load])
+
+  if (!categoryName) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -36,14 +51,14 @@ const Category: React.FC = () => {
             <li><span className="text-gray-400">/</span></li>
             <li><Link to="/collections" className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">Collections</Link></li>
             <li><span className="text-gray-400">/</span></li>
-            <li><span className="text-gray-900 dark:text-white">{category.name}</span></li>
+            <li><span className="text-gray-900 dark:text-white capitalize">{categoryTitle}</span></li>
           </ol>
         </nav>
 
         {/* Header */}
         <div className="mb-12 text-center">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
-            {category.name}
+            {categoryTitle}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
             Discover our premium {category.name.toLowerCase()} collection
@@ -54,7 +69,7 @@ const Category: React.FC = () => {
         {/* Products Count */}
         <div className="mb-8">
           <p className="text-gray-600 dark:text-gray-400">
-            {categoryProducts.length} products in {category.name}
+            {categoryProducts.length} products in {categoryTitle}
           </p>
         </div>
 
