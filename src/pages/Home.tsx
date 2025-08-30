@@ -3,12 +3,33 @@ import { Link } from 'react-router-dom';
 import { FiArrowRight, FiStar, FiTrendingUp } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import Product3D from '../components/Product3D';
-import { products, categories } from '../data/products';
+import api from '../lib/api';
+import bus from '../lib/events';
+
+const mapProduct = (p: any) => ({
+  id: String(p.id),
+  title: p.title,
+  price: Number(p.price_inr),
+  originalPrice: p.original_price_inr ? Number(p.original_price_inr) : undefined,
+  image: p.image_url || (p.images && p.images[0]) || 'https://via.placeholder.com/600x600?text=Product',
+  rating: { rate: Number(p.rating_average || 0), count: Number(p.rating_count || 0) },
+})
 
 const Home: React.FC = () => {
-  const featuredProducts = products.filter(p => p.isFeatured);
-  const trendingProducts = products.filter(p => p.isTrending);
-  const newProducts = products.filter(p => p.isNew);
+  const [featuredProducts, setFeatured] = React.useState<any[]>([])
+  const [trendingProducts, setTrending] = React.useState<any[]>([])
+  const [newProducts, setNew] = React.useState<any[]>([])
+  const [categories, setCategories] = React.useState<any[]>([])
+
+  const load = React.useCallback(() => {
+    api.get('/products', { params: { is_active: true, is_featured: true, page: 1, pageSize: 8 } }).then(r=> setFeatured((r.data.data||[]).map(mapProduct)))
+    api.get('/products', { params: { is_active: true, is_trending: true, page: 1, pageSize: 8 } }).then(r=> setTrending((r.data.data||[]).map(mapProduct)))
+    api.get('/products', { params: { is_active: true, is_new: true, page: 1, pageSize: 8 } }).then(r=> setNew((r.data.data||[]).map(mapProduct)))
+    api.get('/products/categories').then(r => setCategories(r.data.data || []))
+  }, [])
+
+  React.useEffect(() => { load(); }, [load])
+  React.useEffect(() => bus.on('products.updated', load), [load])
 
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
@@ -79,7 +100,7 @@ const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category, index) => (
+            {categories.map((category: any, index: number) => (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, y: 20 }}
