@@ -23,6 +23,7 @@ router.post('/create-order', async (req, res) => {
       items: items.map((it) => ({ product_id: it.productId, quantity: it.quantity, size: it.size, color: it.color }))
     })
 
+    broadcast('orders.updated', { id: String(order._id) })
     res.json({ success: true, data: { order: { _id: String(order._id) } } })
   } catch (e) {
     res.status(500).json({ success: false, error: 'Failed to create order' })
