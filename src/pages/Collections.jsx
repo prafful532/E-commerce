@@ -7,7 +7,7 @@ import bus from '../lib/events';
 import { useWishlist } from '../contexts/WishlistContext';
 
 const Collections = () => {
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('name');
   const [filters, setFilters] = useState({
     category: '',
@@ -17,7 +17,7 @@ const Collections = () => {
     rating: 0,
   });
   const [showFilters, setShowFilters] = useState(false);
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const { addToWishlist, isInWishlist } = useWishlist();
@@ -35,13 +35,13 @@ const Collections = () => {
   }, [])
 
   const derivedCategories = useMemo(() => {
-    const set = new Set<string>()
+    const set = new Set()
     items.forEach(p => { if (p.category) set.add(p.category) })
     return Array.from(set)
   }, [items])
 
   const derivedBrands = useMemo(() => {
-    const set = new Set<string>()
+    const set = new Set()
     items.forEach(p => { if (p.brand) set.add(p.brand) })
     return Array.from(set)
   }, [items])
@@ -97,7 +97,7 @@ const Collections = () => {
     });
   };
 
-  const ProductCard: React.FC<{ product: any; index: number }> = ({ product, index }) => (
+  const ProductCard = ({ product, index }) => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
