@@ -11,6 +11,8 @@ import orderRoutes from './routes/orders.js'
 import paymentRoutes from './routes/payment.js'
 import Profile from './models/Profile.js'
 import bcrypt from 'bcryptjs'
+import { eventsHandler } from './events.js'
+import { broadcast } from './events.js'
 
 
 const app = express()
@@ -54,6 +56,8 @@ async function start() {
     app.get('/api/health', (_req, res) => {
       res.json({ ok: true })
     })
+
+    app.get('/api/events', eventsHandler)
 
     app.use('/api/auth', authRoutes)
     app.use('/api/products', productRoutes)

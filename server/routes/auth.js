@@ -22,6 +22,8 @@ router.post('/signup', async (req, res) => {
     const secret = process.env.JWT_SECRET || 'prafful'
     const token = jwt.sign({ id: profile._id, email: profile.email, role: profile.role }, secret, { expiresIn: '7d' })
 
+    const { broadcast } = await import('../events.js')
+    broadcast('users.updated', { id: String(profile._id) })
     res.json({ token, user: { id: profile._id, email: profile.email, full_name: profile.full_name, role: profile.role } })
   } catch (e) {
     res.status(500).json({ error: 'Signup failed' })
@@ -40,6 +42,8 @@ router.post('/login', async (req, res) => {
     if (!ok) return res.status(400).json({ error: 'Invalid credentials' })
 
     const token = jwt.sign({ id: profile._id, email: profile.email, role: profile.role }, secret, { expiresIn: '7d' })
+    const { broadcast } = await import('../events.js')
+    broadcast('users.updated', { id: String(profile._id) })
     res.json({ token, user: { id: profile._id, email: profile.email, full_name: profile.full_name || 'User', role: profile.role } })
   } catch (e) {
     res.status(500).json({ error: 'Login failed' })

@@ -1,6 +1,7 @@
 import express from 'express'
 import Order from '../models/Order.js'
 import Profile from '../models/Profile.js'
+import { broadcast } from '../events.js'
 
 const router = express.Router()
 
@@ -42,6 +43,7 @@ router.patch('/:id', async (req, res) => {
     const { id } = req.params
     const updates = req.body
     await Order.findByIdAndUpdate(id, { ...updates }, { new: true })
+    broadcast('orders.updated', { id })
     res.json({ ok: true })
   } catch (e) {
     res.status(500).json({ error: 'Failed to update order' })
