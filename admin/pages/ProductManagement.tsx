@@ -183,6 +183,10 @@ const ProductManagement: React.FC = () => {
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Title</label>
                 <input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Description</label>
+                <textarea value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" rows={3} />
+              </div>
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Price (INR)</label>
                 <input type="number" value={form.price_inr} onChange={e=>setForm({...form, price_inr: Number(e.target.value)})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
@@ -190,6 +194,10 @@ const ProductManagement: React.FC = () => {
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Price (USD)</label>
                 <input type="number" value={form.price_usd} onChange={e=>setForm({...form, price_usd: Number(e.target.value)})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Original Price (INR)</label>
+                <input type="number" value={form.original_price_inr} onChange={e=>setForm({...form, original_price_inr: Number(e.target.value)})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
               </div>
               <div>
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Category</label>
@@ -206,6 +214,20 @@ const ProductManagement: React.FC = () => {
               <div className="md:col-span-2">
                 <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
                 <input value={form.image_url} onChange={e=>setForm({...form, image_url:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input type="checkbox" checked={form.is_new} onChange={e=>setForm({...form, is_new: e.target.checked})} />
+                  Mark as New
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input type="checkbox" checked={form.is_featured} onChange={e=>setForm({...form, is_featured: e.target.checked})} />
+                  Featured
+                </label>
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <input type="checkbox" checked={form.is_trending} onChange={e=>setForm({...form, is_trending: e.target.checked})} />
+                  Trending
+                </label>
               </div>
             </div>
             <div className="flex justify-end gap-3 mt-6">
