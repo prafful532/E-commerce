@@ -10,13 +10,13 @@ const Category = () => {
   const { category: categoryName } = useParams();
   const { addToWishlist, isInWishlist } = useWishlist();
 
-  const [categoryProducts, setProducts] = React.useState<any[]>([])
-  const [categoryTitle, setCategoryTitle] = React.useState<string>('')
+  const [categoryProducts, setProducts] = React.useState([])
+  const [categoryTitle, setCategoryTitle] = React.useState('')
 
   const load = React.useCallback(() => {
     if (!categoryName) return
     api.get('/products', { params: { page: 1, pageSize: 200, is_active: true, category: categoryName } }).then(r => {
-      const mapped = (r.data.data || []).map((p:any)=>({
+      const mapped = (r.data.data || []).map((p)=>({
         id: String(p.id), title: p.title, description: p.description || '',
         image: p.image_url || (p.images && p.images[0]) || 'https://via.placeholder.com/600x600?text=Product',
         brand: p.brand || 'Brand', price: Number(p.price_inr), originalPrice: p.original_price_inr ? Number(p.original_price_inr) : undefined,
