@@ -32,12 +32,17 @@ const ProductManagement: React.FC = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [form, setForm] = useState({
     title: '',
+    description: '',
     price_inr: 0,
     price_usd: 0,
+    original_price_inr: 0,
     category: '',
     brand: '',
     stock: 0,
-    image_url: ''
+    image_url: '',
+    is_new: false,
+    is_featured: false,
+    is_trending: false,
   });
 
   useEffect(() => {
