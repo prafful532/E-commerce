@@ -1,5 +1,6 @@
 import express from 'express'
 import Product from '../models/Product.js'
+import { broadcast } from '../events.js'
 
 const router = express.Router()
 
@@ -34,6 +35,19 @@ router.get('/', async (req, res) => {
   }
 })
 
+router.get('/categories', async (_req, res) => {
+  try {
+    const cats = await Product.aggregate([
+      { $match: { is_active: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } },
+      { $sort: { _id: 1 } }
+    ])
+    res.json({ data: cats.map(c => ({ id: c._id || 'general', name: c._id || 'General', count: c.count })) })
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch categories' })
+  }
+})
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
@@ -50,6 +64,7 @@ router.patch('/:id', async (req, res) => {
     const { id } = req.params
     const updates = req.body
     await Product.findByIdAndUpdate(id, { ...updates }, { new: true })
+    broadcast('products.updated', { id })
     res.json({ ok: true })
   } catch (e) {
     res.status(500).json({ error: 'Failed to update product' })
