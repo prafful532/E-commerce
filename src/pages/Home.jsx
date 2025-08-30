@@ -22,9 +22,29 @@ const Home = () => {
   const [categories, setCategories] = React.useState([])
 
   const load = React.useCallback(() => {
-    api.get('/products', { params: { is_active: true, is_featured: true, page: 1, pageSize: 8 } }).then(r=> setFeatured((r.data.data||[]).map(mapProduct)))
-    api.get('/products', { params: { is_active: true, is_trending: true, page: 1, pageSize: 8 } }).then(r=> setTrending((r.data.data||[]).map(mapProduct)))
-    api.get('/products', { params: { is_active: true, is_new: true, page: 1, pageSize: 8 } }).then(r=> setNew((r.data.data||[]).map(mapProduct)))
+    api.get('/products', { params: { is_active: true, is_featured: true, page: 1, pageSize: 8 } })
+      .then(r=> setFeatured((r.data.data||[]).map(mapProduct)))
+
+    api.get('/products', { params: { is_active: true, is_trending: true, page: 1, pageSize: 8 } })
+      .then(r=> {
+        const arr = (r.data.data||[]).map(mapProduct)
+        setTrending(arr)
+        if (!arr.length) {
+          return api.get('/products', { params: { is_active: true, page: 1, pageSize: 8 } })
+            .then(r2 => setTrending((r2.data.data||[]).map(mapProduct)))
+        }
+      })
+
+    api.get('/products', { params: { is_active: true, is_new: true, page: 1, pageSize: 8 } })
+      .then(r=> {
+        const arr = (r.data.data||[]).map(mapProduct)
+        setNew(arr)
+        if (!arr.length) {
+          return api.get('/products', { params: { is_active: true, page: 1, pageSize: 8 } })
+            .then(r2 => setNew((r2.data.data||[]).map(mapProduct)))
+        }
+      })
+
     api.get('/products/categories').then(r => setCategories(r.data.data || []))
   }, [])
 
