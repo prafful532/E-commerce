@@ -88,9 +88,17 @@ router.post('/products', adminAuth, async (req, res) => {
 router.put('/products/:id', adminAuth, async (req, res) => {
   try {
     const { id } = req.params
-    const body = req.body || {}
+    const raw = req.body || {}
+    const bool = (v) => v === true || v === 'true' || v === 1 || v === '1' || v === 'on'
+    const body = {
+      ...raw,
+      ...(raw.is_active !== undefined ? { is_active: bool(raw.is_active) } : {}),
+      ...(raw.is_new !== undefined ? { is_new: bool(raw.is_new) } : {}),
+      ...(raw.is_featured !== undefined ? { is_featured: bool(raw.is_featured) } : {}),
+      ...(raw.is_trending !== undefined ? { is_trending: bool(raw.is_trending) } : {}),
+    }
     const prod = await Product.findByIdAndUpdate(id, body, { new: true })
-    res.json({ success: true, data: prod })
+    res.json({ success: true, data: prod ? { id: String(prod._id), ...prod.toObject() } : null })
     if (prod) broadcast('products.updated', { id: String(prod._id) })
   } catch (e) {
     res.status(500).json({ error: 'Failed to update product' })
