@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FiGrid, FiList, FiFilter, FiStar, FiHeart } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import api from '../lib/api';
+import bus from '../lib/events';
 import { useWishlist } from '../contexts/WishlistContext';
 
 const Collections: React.FC = () => {
@@ -29,7 +30,7 @@ const Collections: React.FC = () => {
         .finally(() => setLoading(false))
     }
     load()
-    const off = (require('../lib/events').default).on('products.updated', load)
+    const off = bus.on('products.updated', load)
     return () => { off && off() }
   }, [])
 
