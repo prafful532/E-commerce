@@ -85,7 +85,20 @@ const ProductManagement: React.FC = () => {
       })
       toast.success('Product created');
       setShowCreate(false);
-      setForm({ title: '', price_inr: 0, price_usd: 0, category: '', brand: '', stock: 0, image_url: '' })
+      setForm({
+        title: '',
+        description: '',
+        price_inr: 0,
+        price_usd: 0,
+        original_price_inr: 0,
+        category: '',
+        brand: '',
+        stock: 0,
+        image_url: '',
+        is_new: false,
+        is_featured: false,
+        is_trending: false,
+      })
       fetchProducts()
     } catch (e) {
       console.error(e)
