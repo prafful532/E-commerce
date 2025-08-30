@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import api from '../lib/api';
 
 interface CartItem {
   id: string;
@@ -53,11 +54,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 
     if (existingItem) {
-      setItems(items.map(item =>
+      const updated = items.map(item =>
         String(item.id) === String(product.id) && item.size === options.size && item.color === options.color
           ? { ...item, quantity: item.quantity + quantity }
           : item
-      ));
+      )
+      setItems(updated);
+      try { api.post('/activity', { type: 'cart.updated', payload: { action: 'add', items: updated } }) } catch {}
     } else {
       const newItem: CartItem = {
         id: String(product.id),
@@ -68,15 +71,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         size: options.size,
         color: options.color,
       };
-      setItems([...items, newItem]);
+      const updated = [...items, newItem]
+      setItems(updated);
+      try { api.post('/activity', { type: 'cart.updated', payload: { action: 'add', items: updated } }) } catch {}
     }
 
     toast.success('Added to cart!');
   };
 
   const removeFromCart = (id: string) => {
-    setItems(items.filter(item => String(item.id) !== String(id)));
+    const updated = items.filter(item => String(item.id) !== String(id))
+    setItems(updated);
     toast.success('Removed from cart');
+    try { api.post('/activity', { type: 'cart.updated', payload: { action: 'remove', items: updated } }) } catch {}
   };
 
   const updateQuantity = (id: string, quantity: number) => {
@@ -85,14 +92,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    setItems(items.map(item =>
+    const updated = items.map(item =>
       String(item.id) === String(id) ? { ...item, quantity } : item
-    ));
+    )
+    setItems(updated);
+    try { api.post('/activity', { type: 'cart.updated', payload: { action: 'update', items: updated } }) } catch {}
   };
 
   const clearCart = () => {
     setItems([]);
     localStorage.removeItem('cart');
+    try { api.post('/activity', { type: 'cart.updated', payload: { action: 'clear', items: [] } }) } catch {}
   };
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
