@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const Footer = () => {
   const [email, setEmail] = useState('');
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = (e) => {
     e.preventDefault();
     if (email) {
       toast.success('Thank you for subscribing!');
