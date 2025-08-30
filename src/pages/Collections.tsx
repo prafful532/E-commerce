@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FiGrid, FiList, FiFilter, FiStar, FiHeart } from 'react-icons/fi';
 import { motion } from 'framer-motion';
-import { products, categories, brands } from '../data/products';
+import api from '../lib/api';
 import { useWishlist } from '../contexts/WishlistContext';
 
 const Collections: React.FC = () => {
