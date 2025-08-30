@@ -6,7 +6,7 @@ import Product3D from '../components/Product3D';
 import api from '../lib/api';
 import bus from '../lib/events';
 
-const mapProduct = (p: any) => ({
+const mapProduct = (p) => ({
   id: String(p.id),
   title: p.title,
   price: Number(p.price_inr),
@@ -16,10 +16,10 @@ const mapProduct = (p: any) => ({
 })
 
 const Home = () => {
-  const [featuredProducts, setFeatured] = React.useState<any[]>([])
-  const [trendingProducts, setTrending] = React.useState<any[]>([])
-  const [newProducts, setNew] = React.useState<any[]>([])
-  const [categories, setCategories] = React.useState<any[]>([])
+  const [featuredProducts, setFeatured] = React.useState([])
+  const [trendingProducts, setTrending] = React.useState([])
+  const [newProducts, setNew] = React.useState([])
+  const [categories, setCategories] = React.useState([])
 
   const load = React.useCallback(() => {
     api.get('/products', { params: { is_active: true, is_featured: true, page: 1, pageSize: 8 } }).then(r=> setFeatured((r.data.data||[]).map(mapProduct)))
@@ -100,7 +100,7 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            {categories.map((category: any, index: number) => (
+            {categories.map((category, index) => (
               <motion.div
                 key={category.id}
                 initial={{ opacity: 0, y: 20 }}
