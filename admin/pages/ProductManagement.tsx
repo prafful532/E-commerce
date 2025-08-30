@@ -43,6 +43,12 @@ const ProductManagement: React.FC = () => {
     fetchProducts();
   }, [currentPage, searchQuery, selectedCategory]);
 
+  useEffect(() => {
+    const { default: bus } = require('../../src/lib/events')
+    const off = bus.on('products.updated', () => fetchProducts())
+    return () => { off && off() }
+  }, [])
+
   const fetchProducts = async () => {
     try {
       setLoading(true);
