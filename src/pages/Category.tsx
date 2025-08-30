@@ -61,7 +61,7 @@ const Category: React.FC = () => {
             {categoryTitle}
           </h1>
           <p className="text-xl text-gray-600 dark:text-gray-300 mb-6">
-            Discover our premium {category.name.toLowerCase()} collection
+            Discover our premium {categoryTitle.toLowerCase()} collection
           </p>
           <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-purple-600 mx-auto"></div>
         </div>
