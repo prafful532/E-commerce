@@ -32,6 +32,12 @@ const OrderManagement: React.FC = () => {
     fetchOrders();
   }, [currentPage, selectedStatus]);
 
+  useEffect(() => {
+    const { default: bus } = require('../../src/lib/events')
+    const off = bus.on('orders.updated', () => fetchOrders())
+    return () => { off && off() }
+  }, [])
+
   const fetchOrders = async () => {
     try {
       setLoading(true);
