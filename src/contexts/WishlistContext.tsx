@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 interface WishlistItem {
-  id: number;
+  id: string;
   title: string;
   price: number;
   image: string;
@@ -12,8 +12,8 @@ interface WishlistItem {
 interface WishlistContextType {
   items: WishlistItem[];
   addToWishlist: (product: any) => void;
-  removeFromWishlist: (id: number) => void;
-  isInWishlist: (id: number) => boolean;
+  removeFromWishlist: (id: string) => void;
+  isInWishlist: (id: string) => boolean;
   clearWishlist: () => void;
 }
 
@@ -42,7 +42,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [items]);
 
   const addToWishlist = (product: any) => {
-    const isAlreadyInWishlist = items.some(item => item.id === product.id);
+    const isAlreadyInWishlist = items.some(item => String(item.id) === String(product.id));
     
     if (isAlreadyInWishlist) {
       toast.error('Already in wishlist');
@@ -50,9 +50,9 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
 
     const newItem: WishlistItem = {
-      id: product.id,
+      id: String(product.id),
       title: product.title,
-      price: product.price,
+      price: Number(product.price),
       image: product.image,
       category: product.category,
     };
@@ -61,13 +61,13 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     toast.success('Added to wishlist!');
   };
 
-  const removeFromWishlist = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
+  const removeFromWishlist = (id: string) => {
+    setItems(items.filter(item => String(item.id) !== String(id)));
     toast.success('Removed from wishlist');
   };
 
-  const isInWishlist = (id: number) => {
-    return items.some(item => item.id === id);
+  const isInWishlist = (id: string) => {
+    return items.some(item => String(item.id) === String(id));
   };
 
   const clearWishlist = () => {
