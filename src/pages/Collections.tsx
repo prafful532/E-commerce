@@ -12,15 +12,49 @@ const Collections: React.FC = () => {
     category: '',
     brand: '',
     minPrice: 0,
-    maxPrice: 1000,
+    maxPrice: 9999999,
     rating: 0,
   });
   const [showFilters, setShowFilters] = useState(false);
+  const [items, setItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const { addToWishlist, isInWishlist } = useWishlist();
 
+  useEffect(() => {
+    setLoading(true)
+    api.get('/products', { params: { page: 1, pageSize: 200, is_active: true } })
+      .then(r => setItems(r.data.data || []))
+      .finally(() => setLoading(false))
+  }, [])
+
+  const derivedCategories = useMemo(() => {
+    const set = new Set<string>()
+    items.forEach(p => { if (p.category) set.add(p.category) })
+    return Array.from(set)
+  }, [items])
+
+  const derivedBrands = useMemo(() => {
+    const set = new Set<string>()
+    items.forEach(p => { if (p.brand) set.add(p.brand) })
+    return Array.from(set)
+  }, [items])
+
+  const mapped = useMemo(() => items.map(p => ({
+    id: String(p.id),
+    title: p.title,
+    price: Number(p.price_inr),
+    originalPrice: p.original_price_inr ? Number(p.original_price_inr) : undefined,
+    description: p.description || '',
+    category: p.category || 'general',
+    image: p.image_url || (p.images && p.images[0]) || 'https://via.placeholder.com/600x600?text=Product',
+    rating: { rate: Number(p.rating_average || 0), count: Number(p.rating_count || 0) },
+    brand: p.brand || 'Brand',
+    features: p.features || [],
+  })), [items])
+
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = products.filter(product => {
+    let filtered = mapped.filter(product => {
       return (
         (filters.category === '' || product.category === filters.category) &&
         (filters.brand === '' || product.brand === filters.brand) &&
@@ -30,7 +64,6 @@ const Collections: React.FC = () => {
       );
     });
 
-    // Sort products
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'price-low':
@@ -46,7 +79,7 @@ const Collections: React.FC = () => {
     });
 
     return filtered;
-  }, [filters, sortBy]);
+  }, [mapped, filters, sortBy]);
 
   const resetFilters = () => {
     setFilters({
