@@ -22,10 +22,15 @@ const Collections: React.FC = () => {
   const { addToWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
-    setLoading(true)
-    api.get('/products', { params: { page: 1, pageSize: 200, is_active: true } })
-      .then(r => setItems(r.data.data || []))
-      .finally(() => setLoading(false))
+    const load = () => {
+      setLoading(true)
+      api.get('/products', { params: { page: 1, pageSize: 200, is_active: true } })
+        .then(r => setItems(r.data.data || []))
+        .finally(() => setLoading(false))
+    }
+    load()
+    const off = (require('../lib/events').default).on('products.updated', load)
+    return () => { off && off() }
   }, [])
 
   const derivedCategories = useMemo(() => {
