@@ -148,7 +148,7 @@ const Category = () => {
                 </div>
 
                 <div className="flex flex-wrap gap-1 mb-3">
-                  {product.features.slice(0, 2).map((feature, idx) => (
+                  {(product.features || []).slice(0, 2).map((feature, idx) => (
                     <span
                       key={idx}
                       className="text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded"
