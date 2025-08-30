@@ -17,10 +17,11 @@ const Category = () => {
     if (!categoryName) return
     api.get('/products', { params: { page: 1, pageSize: 200, is_active: true, category: categoryName } }).then(r => {
       const mapped = (r.data.data || []).map((p)=>({
-        id: String(p.id), title: p.title, description: p.description || '',
+        id: String(p.id), title: p.title || 'Untitled', description: p.description || '',
         image: p.image_url || (p.images && p.images[0]) || 'https://via.placeholder.com/600x600?text=Product',
-        brand: p.brand || 'Brand', price: Number(p.price_inr), originalPrice: p.original_price_inr ? Number(p.original_price_inr) : undefined,
-        rating: { rate: Number(p.rating_average||0), count: Number(p.rating_count||0) }, category: p.category || 'general'
+        brand: p.brand || 'Brand', price: Number(p.price_inr || p.price_usd || 0), originalPrice: p.original_price_inr ? Number(p.original_price_inr) : undefined,
+        rating: { rate: Number(p.rating_average||0), count: Number(p.rating_count||0) }, category: p.category || 'general',
+        features: Array.isArray(p.features) ? p.features : []
       }))
       setProducts(mapped)
       setCategoryTitle(categoryName)
