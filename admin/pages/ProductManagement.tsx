@@ -28,6 +28,16 @@ const ProductManagement: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10;
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    title: '',
+    price_inr: 0,
+    price_usd: 0,
+    category: '',
+    brand: '',
+    stock: 0,
+    image_url: ''
+  });
 
   useEffect(() => {
     fetchProducts();
@@ -51,6 +61,26 @@ const ProductManagement: React.FC = () => {
       setLoading(false);
     }
   };
+
+  const createProduct = async () => {
+    try {
+      if (!form.title || !form.price_inr || !form.price_usd) {
+        toast.error('Please fill required fields');
+        return;
+      }
+      await api.post('/admin/products', {
+        ...form,
+        is_active: true
+      })
+      toast.success('Product created');
+      setShowCreate(false);
+      setForm({ title: '', price_inr: 0, price_usd: 0, category: '', brand: '', stock: 0, image_url: '' })
+      fetchProducts()
+    } catch (e) {
+      console.error(e)
+      toast.error('Failed to create product')
+    }
+  }
 
   const deleteProduct = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
@@ -83,7 +113,7 @@ const ProductManagement: React.FC = () => {
             Manage your product catalog
           </p>
         </div>
-        <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+        <button onClick={() => setShowCreate(true)} className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
           <FiPlus className="h-4 w-4 mr-2" />
           Add Product
         </button>
@@ -118,6 +148,49 @@ const ProductManagement: React.FC = () => {
           </select>
         </div>
       </div>
+
+      {/* Create Modal */}
+      {showCreate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add Product</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                <input value={form.title} onChange={e=>setForm({...form, title:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Price (INR)</label>
+                <input type="number" value={form.price_inr} onChange={e=>setForm({...form, price_inr: Number(e.target.value)})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Price (USD)</label>
+                <input type="number" value={form.price_usd} onChange={e=>setForm({...form, price_usd: Number(e.target.value)})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                <input value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Brand</label>
+                <input value={form.brand} onChange={e=>setForm({...form, brand:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Stock</label>
+                <input type="number" value={form.stock} onChange={e=>setForm({...form, stock: Number(e.target.value)})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm text-gray-700 dark:text-gray-300 mb-1">Image URL</label>
+                <input value={form.image_url} onChange={e=>setForm({...form, image_url:e.target.value})} className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <button onClick={()=>setShowCreate(false)} className="px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300">Cancel</button>
+              <button onClick={createProduct} className="px-4 py-2 rounded-lg bg-blue-600 text-white">Save</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Products Table */}
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
