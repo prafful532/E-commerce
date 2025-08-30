@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import api from '../../src/lib/api';
 import LoadingSpinner from '../../src/components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
+import bus from '../../src/lib/events';
 
 interface Product {
   id: string;
@@ -44,7 +45,6 @@ const ProductManagement: React.FC = () => {
   }, [currentPage, searchQuery, selectedCategory]);
 
   useEffect(() => {
-    const { default: bus } = require('../../src/lib/events')
     const off = bus.on('products.updated', () => fetchProducts())
     return () => { off && off() }
   }, [])
