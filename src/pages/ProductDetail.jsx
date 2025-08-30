@@ -8,7 +8,7 @@ import { useCart } from '../contexts/CartContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import Product3D from '../components/Product3D';
 
-const map = (p: any) => ({
+const map = (p) => ({
   id: String(p.id),
   title: p.title,
   price: Number(p.price_inr),
@@ -25,12 +25,12 @@ const map = (p: any) => ({
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const [product, setProduct] = useState<any | null>(null);
+  const [product, setProduct] = useState(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState<'description' | 'features' | 'reviews'>('description');
+  const [activeTab, setActiveTab] = useState('description');
 
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
@@ -54,7 +54,7 @@ const ProductDetail = () => {
     );
   }
 
-  const relatedProducts: any[] = []
+  const relatedProducts = []
 
   const handleAddToCart = () => {
     addToCart(product, quantity, { size: selectedSize, color: selectedColor });
@@ -89,7 +89,7 @@ const ProductDetail = () => {
               />
             </div>
             <div className="flex space-x-4 overflow-x-auto pb-2">
-              {product.images.map((image: string, index: number) => (
+              {product.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
@@ -144,7 +144,7 @@ const ProductDetail = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Color</h3>
                 <div className="flex space-x-3">
-                  {product.colors.map((color: string) => (
+                  {product.colors.map((color) => (
                     <button
                       key={color}
                       onClick={() => setSelectedColor(color)}
@@ -165,7 +165,7 @@ const ProductDetail = () => {
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Size</h3>
                 <div className="flex flex-wrap gap-3">
-                  {product.sizes.map((size: string) => (
+                  {product.sizes.map((size) => (
                     <button
                       key={size}
                       onClick={() => setSelectedSize(size)}
