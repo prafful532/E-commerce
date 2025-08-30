@@ -16,9 +16,9 @@ const AdminPortal = () => {
   const src = useMemo(() => `/admin/index.html#${pathInAdmin}`, [pathInAdmin])
 
   useEffect(() => {
-    function onMessage(event: MessageEvent) {
+    function onMessage(event) {
       if (!event || !event.data) return
-      const { type, path } = event.data as { type?: string; path?: string }
+      const { type, path } = event.data || {}
       if (type === 'admin-route' && typeof path === 'string') {
         const normalized = path.startsWith(BASE) ? path : `${BASE}${path.startsWith('/') ? '' : '/'}${path}`
         if (normalized !== location.pathname) {
