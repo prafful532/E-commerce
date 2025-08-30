@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import api from '../../src/lib/api';
 import LoadingSpinner from '../../src/components/ui/LoadingSpinner';
 import toast from 'react-hot-toast';
+import bus from '../../src/lib/events';
 
 interface Order {
   id: string;
@@ -33,7 +34,6 @@ const OrderManagement: React.FC = () => {
   }, [currentPage, selectedStatus]);
 
   useEffect(() => {
-    const { default: bus } = require('../../src/lib/events')
     const off = bus.on('orders.updated', () => fetchOrders())
     return () => { off && off() }
   }, [])
