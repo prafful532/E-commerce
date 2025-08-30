@@ -7,7 +7,8 @@ import { useWishlist } from '../../contexts/WishlistContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import SearchModal from '../ui/SearchModal';
-import { categories } from '../../data/products';
+import api from '../../lib/api';
+import bus from '../../lib/events';
 
 const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -17,6 +18,15 @@ const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const navigate = useNavigate();
+
+  const [cats, setCats] = useState<{id:string;name:string}[]>([])
+
+  React.useEffect(() => {
+    const load = () => api.get('/products/categories').then(r => setCats((r.data.data||[]).map((c:any)=>({id:String(c.id), name:c.name}))))
+    load()
+    const off = bus.on('products.updated', load)
+    return () => { off && off() }
+  }, [])
 
   const handleCategoryClick = (categoryId: string) => {
     navigate(`/category/${categoryId}`);
@@ -46,11 +56,11 @@ const Navbar: React.FC = () => {
                   Collections
                 </button>
                 <div className="absolute top-full left-0 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 border border-gray-200 dark:border-gray-700">
-                  {categories.map((category) => (
+                  {cats.map((category) => (
                     <Link
                       key={category.id}
                       to={`/category/${category.id}`}
-                      className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg"
+                      className="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 first:rounded-t-lg last:rounded-b-lg capitalize"
                     >
                       {category.name}
                     </Link>
@@ -167,11 +177,11 @@ const Navbar: React.FC = () => {
               </Link>
               <div className="space-y-2">
                 <span className="block text-sm font-medium text-gray-500 dark:text-gray-400">Collections</span>
-                {categories.map((category) => (
+                {cats.map((category) => (
                   <button
                     key={category.id}
                     onClick={() => handleCategoryClick(category.id)}
-                    className="block pl-4 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                    className="block pl-4 text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors capitalize"
                   >
                     {category.name}
                   </button>
