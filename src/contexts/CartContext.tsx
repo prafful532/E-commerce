@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 interface CartItem {
-  id: number;
+  id: string;
   title: string;
   price: number;
   image: string;
@@ -14,8 +14,8 @@ interface CartItem {
 interface CartContextType {
   items: CartItem[];
   addToCart: (product: any, quantity?: number, options?: { size?: string; color?: string }) => void;
-  removeFromCart: (id: number) => void;
-  updateQuantity: (id: number, quantity: number) => void;
+  removeFromCart: (id: string) => void;
+  updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -46,23 +46,23 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const addToCart = (product: any, quantity = 1, options: { size?: string; color?: string } = {}) => {
-    const existingItem = items.find(item => 
-      item.id === product.id && 
+    const existingItem = items.find(item =>
+      String(item.id) === String(product.id) && 
       item.size === options.size && 
       item.color === options.color
     );
 
     if (existingItem) {
       setItems(items.map(item =>
-        item.id === product.id && item.size === options.size && item.color === options.color
+        String(item.id) === String(product.id) && item.size === options.size && item.color === options.color
           ? { ...item, quantity: item.quantity + quantity }
           : item
       ));
     } else {
       const newItem: CartItem = {
-        id: product.id,
+        id: String(product.id),
         title: product.title,
-        price: product.price,
+        price: Number(product.price),
         image: product.image,
         quantity,
         size: options.size,
@@ -74,19 +74,19 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     toast.success('Added to cart!');
   };
 
-  const removeFromCart = (id: number) => {
-    setItems(items.filter(item => item.id !== id));
+  const removeFromCart = (id: string) => {
+    setItems(items.filter(item => String(item.id) !== String(id)));
     toast.success('Removed from cart');
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
       return;
     }
 
     setItems(items.map(item =>
-      item.id === id ? { ...item, quantity } : item
+      String(item.id) === String(id) ? { ...item, quantity } : item
     ));
   };
 
@@ -96,7 +96,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const totalItems = items.reduce((total, item) => total + item.quantity, 0);
-  const totalPrice = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+  const totalPrice = items.reduce((total, item) => total + (Number(item.price) * item.quantity), 0);
 
   return (
     <CartContext.Provider value={{
