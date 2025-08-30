@@ -68,9 +68,17 @@ router.get('/users', adminAuth, async (_req, res) => {
 
 router.post('/products', adminAuth, async (req, res) => {
   try {
-    const body = req.body || {}
+    const raw = req.body || {}
+    const bool = (v) => v === true || v === 'true' || v === 1 || v === '1' || v === 'on'
+    const body = {
+      ...raw,
+      is_active: bool(raw.is_active ?? true),
+      is_new: bool(raw.is_new ?? false),
+      is_featured: bool(raw.is_featured ?? false),
+      is_trending: bool(raw.is_trending ?? false),
+    }
     const prod = await Product.create(body)
-    res.json({ success: true, data: prod })
+    res.json({ success: true, data: { id: String(prod._id), ...prod.toObject() } })
     broadcast('products.updated', { id: String(prod._id) })
   } catch (e) {
     res.status(500).json({ error: 'Failed to create product' })
