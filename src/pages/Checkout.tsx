@@ -3,6 +3,7 @@ import { FiCreditCard, FiTruck, FiLock, FiSmartphone, FiDownload } from 'react-i
 import { motion } from 'framer-motion';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import QRPayment from '../components/QRPayment';
 import toast from 'react-hot-toast';
 
 const Checkout: React.FC = () => {
@@ -10,8 +11,8 @@ const Checkout: React.FC = () => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [qrCodeData, setQrCodeData] = useState<any>(null);
   const [showQRCode, setShowQRCode] = useState(false);
+  const [orderId, setOrderId] = useState('');
   
   const [shippingData, setShippingData] = useState({
     firstName: '',
@@ -47,65 +48,17 @@ const Checkout: React.FC = () => {
   const tax = totalPrice * 0.08;
   const finalTotal = totalPrice + shippingCost + tax;
 
-  const generateQRCode = async () => {
-    try {
-      // First create an order
-      const orderResponse = await fetch('/api/payment/create-order', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
-        body: JSON.stringify({
-          items: items.map(item => ({
-            productId: item.id,
-            quantity: item.quantity,
-            size: item.size,
-            color: item.color
-          })),
-          shippingAddress: shippingData,
-          currency: 'INR'
-        })
-      });
-
-      const orderData = await orderResponse.json();
-      if (!orderData.success) {
-        toast.error('Failed to create order');
-        return;
-      }
-
-      // Generate QR code for the order
-      const qrResponse = await fetch('/api/payment/generate-qr', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token}`
-        },
-        body: JSON.stringify({
-          orderId: orderData.data.order._id,
-          amount: Math.round(finalTotal * 83), // Convert to INR
-          currency: 'INR'
-        })
-      });
-
-      const qrData = await qrResponse.json();
-      if (qrData.success) {
-        setQrCodeData(qrData.data);
-        setShowQRCode(true);
-        toast.success('QR Code generated! Scan to pay.');
-      } else {
-        toast.error('Failed to generate QR code');
-      }
-    } catch (error) {
-      console.error('QR Code generation error:', error);
-      toast.error('Failed to generate QR code');
-    }
+  const generateOrderId = () => {
+    return 'ORD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).slice(2, 8).toUpperCase();
   };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (paymentMethod === 'qr_code') {
-      await generateQRCode();
+      const newOrderId = generateOrderId();
+      setOrderId(newOrderId);
+      setShowQRCode(true);
     } else {
       // Simulate payment processing
       toast.loading('Processing payment...');
@@ -119,6 +72,18 @@ const Checkout: React.FC = () => {
     }
   };
 
+  const handlePaymentComplete = () => {
+    toast.success('Payment completed successfully!');
+    clearCart();
+    setShowQRCode(false);
+    // In a real app, redirect to order confirmation page
+  };
+
+  const handleCancelQR = () => {
+    setShowQRCode(false);
+    setOrderId('');
+  };
+
   const paymentMethods = [
     { id: 'card', name: 'Credit/Debit Card', icon: FiCreditCard },
     { id: 'razorpay', name: 'Razorpay', icon: FiSmartphone },
@@ -127,80 +92,24 @@ const Checkout: React.FC = () => {
     { id: 'cod', name: 'Cash on Delivery', icon: FiTruck },
   ];
 
-  if (showQRCode && qrCodeData) {
+  if (showQRCode) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-lg p-8 text-center"
-          >
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-              Scan QR Code to Pay
-            </h2>
-            
-            <div className="bg-white p-4 rounded-lg inline-block mb-6">
-              <img 
-                src={qrCodeData.qrCode} 
-                alt="Payment QR Code" 
-                className="w-64 h-64 mx-auto"
-              />
-            </div>
-            
-            <div className="space-y-4 mb-6">
-              <div className="text-lg">
-                <span className="text-gray-600 dark:text-gray-400">Amount: </span>
-                <span className="font-bold text-green-600">₹{qrCodeData.amount.inr.toLocaleString()}</span>
-              </div>
-              
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Payment ID: {qrCodeData.paymentId}
-              </div>
-              
-              <div className="text-sm text-orange-600 dark:text-orange-400">
-                ⏰ Expires in 15 minutes
-              </div>
-            </div>
-            
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg mb-6">
-              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">
-                How to Pay:
-              </h3>
-              <ol className="text-sm text-blue-700 dark:text-blue-300 text-left space-y-1">
-                <li>1. Open any UPI app (PhonePe, Paytm, Google Pay, etc.)</li>
-                <li>2. Scan the QR code above</li>
-                <li>3. Verify the amount: ₹{qrCodeData.amount.inr.toLocaleString()}</li>
-                <li>4. Complete the payment</li>
-                <li>5. Your order will be confirmed automatically</li>
-              </ol>
-            </div>
-            
-            <div className="flex space-x-4 justify-center">
-              <button
-                onClick={() => setShowQRCode(false)}
-                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-              >
-                Back to Payment Options
-              </button>
-              
-              <button
-                onClick={() => {
-                  // Simulate payment verification
-                  toast.success('Payment completed successfully!');
-                  clearCart();
-                  setShowQRCode(false);
-                }}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                I've Paid
-              </button>
-            </div>
-          </motion.div>
+          <QRPayment
+            amount={finalTotal}
+            orderId={orderId}
+            merchantName="ModernStore"
+            merchantUPI="modernstore@paytm"
+            customerName={`${shippingData.firstName} ${shippingData.lastName}`.trim() || 'Customer'}
+            onPaymentComplete={handlePaymentComplete}
+            onCancel={handleCancelQR}
+          />
         </div>
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -426,18 +335,7 @@ const Checkout: React.FC = () => {
                       QR Code Payment
                     </h4>
                     <p className="text-sm text-blue-700 dark:text-blue-300">
-                      Click "Place Order" to generate a QR code that you can scan with any UPI app to complete your payment.
-                    </p>
-                  </div>
-                )}
-                {/* QR Code for UPI */}
-                {paymentMethod === 'upi' && (
-                  <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg text-center">
-                    <div className="w-32 h-32 bg-white mx-auto mb-4 rounded-lg flex items-center justify-center">
-                      <span className="text-gray-400">QR Code</span>
-                    </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                      Scan this QR code with your UPI app
+                      Click "Generate QR Code" to create a UPI payment QR code that works with Paytm, Google Pay, PhonePe, and other UPI apps.
                     </p>
                   </div>
                 )}
