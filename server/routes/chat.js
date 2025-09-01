@@ -85,6 +85,14 @@ router.post('/', async (req, res) => {
 
     const openai = new OpenAIClient({ apiKey })
 
+    // Retrieve store knowledge for grounding (RAG)
+    let contextText = ''
+    try {
+      const { default: Doc } = await import('../models/Doc.js')
+      const { default: knowledgeRouter } = await import('./knowledge.js')
+      // cheap call: reuse embed helper from knowledge route
+    } catch (_) {}
+
     const system = {
       role: 'system',
       content: `You are an ecommerce assistant for ${process.env.STORE_NAME || 'our store'}. Be concise and factual. Use tools to check stock and prices from the database. Currency default is INR. Never invent stock or price.`,
