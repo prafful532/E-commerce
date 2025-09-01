@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
+import { useEffect, useState } from 'react';
 
 const Profile: React.FC = () => {
   const { user, logout, updateProfile } = useAuth();
