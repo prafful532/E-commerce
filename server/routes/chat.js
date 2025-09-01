@@ -85,18 +85,24 @@ router.post('/', async (req, res) => {
 
     const openai = new OpenAIClient({ apiKey })
 
-    // Retrieve store knowledge for grounding (RAG)
+    // Retrieve store knowledge for grounding (RAG-lite)
     let contextText = ''
     try {
       const { default: Doc } = await import('../models/Doc.js')
-      const { default: knowledgeRouter } = await import('./knowledge.js')
-      // cheap call: reuse embed helper from knowledge route
+      const last = String(messages[messages.length - 1]?.content || '')
+      const keywords = last.split(/\s+/).slice(0, 6).map((w)=>w.replace(/[^\w]/g,'')).filter(Boolean).join('|')
+      if (keywords) {
+        const docs = await Doc.find({ text: { $regex: keywords, $options: 'i' } }).limit(5).lean()
+        contextText = docs.map(d => d.text).join('\n---\n').slice(0, 4000)
+      }
     } catch (_) {}
 
     const system = {
       role: 'system',
       content: `You are an ecommerce assistant for ${process.env.STORE_NAME || 'our store'}. Be concise and factual. Use tools to check stock and prices from the database. Currency default is INR. Never invent stock or price.`,
     }
+
+    const preContext = contextText ? [{ role: 'system', content: `Store knowledge to reference:\n${contextText}` }] : []
 
     const tools = [
       {
