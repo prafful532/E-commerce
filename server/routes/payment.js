@@ -6,10 +6,11 @@ import QRCode from 'qrcode'
 import Razorpay from 'razorpay'
 import Stripe from 'stripe'
 import { broadcast } from '../events.js'
+import { optionalAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 
-router.post('/create-order', async (req, res) => {
+router.post('/create-order', optionalAuth, async (req, res) => {
   try {
     const { items = [], shippingAddress = {}, currency = 'INR', totalUsd, totalInr } = req.body || {}
 
