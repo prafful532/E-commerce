@@ -1,7 +1,7 @@
-import express from 'express'
 import Order from '../models/Order.js'
 import Profile from '../models/Profile.js'
 import { broadcast } from '../events.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 
@@ -35,6 +35,27 @@ router.get('/', async (req, res) => {
     res.json({ data, total })
   } catch (e) {
     res.status(500).json({ error: 'Failed to fetch orders' })
+  }
+})
+
+// Get orders for the currently authenticated user
+router.get('/my', requireAuth, async (req, res) => {
+  try {
+    const userId = req.user.id
+    const orders = await Order.find({ user_id: userId }).sort({ created_at: -1 }).lean()
+    const data = orders.map(o => ({
+      id: String(o._id),
+      created_at: o.created_at,
+      status: o.status,
+      payment_status: o.payment_status,
+      total_amount_inr: o.total_amount_inr,
+      total_amount_usd: o.total_amount_usd,
+      items: o.items || [],
+      shipping_address: o.shipping_address || null
+    }))
+    res.json({ data })
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch my orders' })
   }
 })
 
