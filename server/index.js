@@ -65,6 +65,8 @@ async function start() {
     app.use('/api/orders', orderRoutes)
     app.use('/api/payment', paymentRoutes)
     app.use('/api/chat', (await import('./routes/chat.js')).default)
+    app.use('/api/knowledge', (await import('./routes/knowledge.js')).default)
+    app.use('/api/mcp', (await import('./routes/mcp.js')).default)
     app.use('/api/activity', (await import('./routes/activity.js')).default)
     app.use('/api/admin', (await import('./routes/admin.js')).default)
 
