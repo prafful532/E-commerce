@@ -42,8 +42,10 @@ router.get('/', async (req, res) => {
 router.get('/my', requireAuth, async (req, res) => {
   try {
     const userId = req.user.id
-    const orders = await Order.find({ user_id: userId }).sort({ created_at: -1 }).lean()
-    const data = orders.map(o => ({
+    const email = req.user.email
+    const orders = await Order.find({ $or: [ { user_id: userId }, { user_id: { $exists: false } }, { user_id: null } ] }).sort({ created_at: -1 }).lean()
+    const mine = orders.filter((o) => String(o.user_id) === String(userId) || (o.shipping_address && o.shipping_address.email && String(o.shipping_address.email).toLowerCase() === String(email).toLowerCase()))
+    const data = mine.map(o => ({
       id: String(o._id),
       created_at: o.created_at,
       status: o.status,
