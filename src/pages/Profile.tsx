@@ -4,13 +4,13 @@ import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import toast from 'react-hot-toast';
-import React from 'react';
+import * as React2 from 'react';
 
 const Profile: React.FC = () => {
   const { user, logout, updateProfile } = useAuth();
-  const [activeTab, setActiveTab] = React.useState('profile');
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [profileData, setProfileData] = React.useState({
+  const [activeTab, setActiveTab] = React2.useState('profile');
+  const [isEditing, setIsEditing] = React2.useState(false);
+  const [profileData, setProfileData] = React2.useState({
     name: user?.name || '',
     email: user?.email || '',
     phone: '',
@@ -18,8 +18,8 @@ const Profile: React.FC = () => {
   });
   const [orders, setOrders] = React.useState<any[]>([]);
   const [address, setAddress] = React.useState<any | null>(null);
-  const [showAddressForm, setShowAddressForm] = React.useState(false);
-  const [addressForm, setAddressForm] = React.useState({
+  const [showAddressForm, setShowAddressForm] = React2.useState(false);
+  const [addressForm, setAddressForm] = React2.useState({
     firstName: '',
     lastName: '',
     email: user?.email || '',
@@ -31,7 +31,7 @@ const Profile: React.FC = () => {
     country: 'US',
   });
 
-  React.useEffect(() => {
+  React2.useEffect(() => {
     const loadProfile = async () => {
       try {
         const { data } = await api.get('/profiles/me');
