@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { FiUser, FiMapPin, FiPackage, FiSettings, FiEdit2, FiSave, FiX } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
+import api from '../lib/api';
+import toast from 'react-hot-toast';
 
 const Profile: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -13,53 +15,42 @@ const Profile: React.FC = () => {
     phone: '',
     dateOfBirth: '',
   });
+  const [orders, setOrders] = useState<any[]>([]);
+  const [address, setAddress] = useState<any | null>(null);
+  const [showAddressForm, setShowAddressForm] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    firstName: '',
+    lastName: '',
+    email: user?.email || '',
+    phone: '',
+    address: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    country: 'US',
+  });
 
-  const mockOrders = [
-    {
-      id: 'ORD-001',
-      date: '2024-01-15',
-      status: 'Delivered',
-      total: 299.99,
-      items: 2,
-    },
-    {
-      id: 'ORD-002',
-      date: '2024-01-10',
-      status: 'In Transit',
-      total: 149.99,
-      items: 1,
-    },
-    {
-      id: 'ORD-003',
-      date: '2024-01-08',
-      status: 'Processing',
-      total: 89.99,
-      items: 1,
-    },
-  ];
-
-  const mockAddresses = [
-    {
-      id: 1,
-      type: 'Home',
-      name: 'John Doe',
-      address: '123 Main St',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10001',
-      isDefault: true,
-    },
-    {
-      id: 2,
-      type: 'Office',
-      name: 'John Doe',
-      address: '456 Business Ave',
-      city: 'New York',
-      state: 'NY',
-      zipCode: '10002',
-      isDefault: false,
-    },
-  ];
+  useEffect(() => {
+    const loadProfile = async () => {
+      try {
+        const { data } = await api.get('/profiles/me');
+        const p = data?.data;
+        if (p) {
+          setProfileData((prev) => ({ ...prev, name: p.full_name || prev.name, email: p.email || prev.email, phone: p.phone || '' }));
+          if (p.address) { setAddress(p.address); setAddressForm({ ...addressForm, ...p.address, email: p.email, phone: p.phone || '' }); }
+        }
+      } catch (_) {}
+    };
+    const loadOrders = async () => {
+      try {
+        const { data } = await api.get('/orders/my');
+        setOrders(data?.data || []);
+      } catch (_) {
+        setOrders([]);
+      }
+    };
+    if (user) { loadProfile(); loadOrders(); }
+  }, [user]);
 
   const tabs = [
     { id: 'profile', name: 'Profile', icon: FiUser },
@@ -68,18 +59,33 @@ const Profile: React.FC = () => {
     { id: 'settings', name: 'Settings', icon: FiSettings },
   ];
 
-  const handleSaveProfile = () => {
-    setIsEditing(false);
-    // In a real app, save to backend
+  const handleSaveProfile = async () => {
+    try {
+      const ok = await updateProfile({ name: profileData.name, phone: profileData.phone });
+      if (ok) { toast.success('Profile updated'); setIsEditing(false); }
+    } catch (_) {}
+  };
+
+  const saveAddress = async () => {
+    const payload = { ...addressForm };
+    const ok = await updateProfile({ address: payload, phone: profileData.phone });
+    if (ok) { setAddress(payload); setShowAddressForm(false); toast.success('Address saved'); }
+  };
+  const deleteAddress = async () => {
+    const ok = await updateProfile({ address: null });
+    if (ok) { setAddress(null); toast.success('Address removed'); }
   };
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    switch ((status || '').toLowerCase()) {
       case 'delivered':
         return 'text-green-600 bg-green-100 dark:bg-green-900/30 dark:text-green-400';
+      case 'out for delivery':
+      case 'shipped':
       case 'in transit':
         return 'text-blue-600 bg-blue-100 dark:bg-blue-900/30 dark:text-blue-400';
       case 'processing':
+      case 'placed':
         return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/30 dark:text-yellow-400';
       default:
         return 'text-gray-600 bg-gray-100 dark:bg-gray-900/30 dark:text-gray-400';
