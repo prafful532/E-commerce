@@ -41,6 +41,18 @@ async function start() {
     await mongoose.connect(mongoUri, connOptions)
     console.log('Connected to MongoDB')
 
+    // Seed knowledge base from products (first run)
+    try {
+      const { default: Doc } = await import('./models/Doc.js')
+      const { default: Product } = await import('./models/Product.js')
+      const count = await Doc.countDocuments({})
+      if (count === 0) {
+        const prods = await Product.find({ is_active: true }).limit(100).lean()
+        await Doc.insertMany(prods.map(p => ({ title: p.title, text: `${p.title}\nCategory: ${p.category || ''}\nDescription: ${p.description || ''}\nPrice (INR): ${p.price_inr ?? ''}\nSKU: ${p.sku || ''}`, source: 'product' })))
+        console.log('Seeded knowledge base from products')
+      }
+    } catch (_) {}
+
     // Seed admin user if not exists
     const email = process.env.ADMIN_EMAIL
     const password = process.env.ADMIN_PASSWORD
