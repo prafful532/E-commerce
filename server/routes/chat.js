@@ -2,6 +2,8 @@ import express from 'express'
 import { z } from 'zod'
 import Product from '../models/Product.js'
 
+import express from 'express'
+
 let OpenAIClient = null
 try {
   const mod = await import('openai')
