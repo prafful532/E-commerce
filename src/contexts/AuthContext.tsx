@@ -52,8 +52,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const updateProfile = async (userData: Partial<User>): Promise<boolean> => {
     const updates: any = {};
-    if (userData.name) updates.full_name = userData.name;
-    if (userData.role) updates.role = userData.role;
+    if (userData.name !== undefined) updates.full_name = userData.name;
+    if (userData.role !== undefined) updates.role = userData.role;
+    if (userData.phone !== undefined) updates.phone = userData.phone;
+    if (userData.address !== undefined) updates.address = userData.address;
     return await updateApiProfile(updates);
   };
 
