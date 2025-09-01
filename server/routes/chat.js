@@ -126,7 +126,7 @@ router.post('/', async (req, res) => {
       },
     ]
 
-    const first = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [system, ...messages], tools, tool_choice: 'auto', temperature: 0.2 })
+    const first = await openai.chat.completions.create({ model: 'gpt-4o-mini', messages: [system, ...preContext, ...messages], tools, tool_choice: 'auto', temperature: 0.2 })
     const msg = first.choices?.[0]?.message || {}
 
     if (msg.tool_calls && msg.tool_calls.length) {
