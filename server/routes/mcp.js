@@ -1,4 +1,5 @@
 import express from 'express'
+import express from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import Product from '../models/Product.js'
 import Profile from '../models/Profile.js'
