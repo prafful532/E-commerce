@@ -270,7 +270,10 @@ const Profile: React.FC = () => {
                     Order History
                   </h2>
                   <div className="space-y-4">
-                    {mockOrders.map((order) => (
+                    {orders.length === 0 && (
+                      <div className="text-gray-600 dark:text-gray-400">No orders yet.</div>
+                    )}
+                    {orders.map((order) => (
                       <div
                         key={order.id}
                         className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 hover:shadow-md transition-shadow"
@@ -278,10 +281,10 @@ const Profile: React.FC = () => {
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h3 className="font-semibold text-gray-900 dark:text-white">
-                              Order {order.id}
+                              Order #{String(order.id).slice(-8).toUpperCase()}
                             </h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
-                              Placed on {order.date}
+                              Placed on {order.created_at ? new Date(order.created_at).toLocaleString() : ''}
                             </p>
                           </div>
                           <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
@@ -290,10 +293,10 @@ const Profile: React.FC = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {order.items} {order.items === 1 ? 'item' : 'items'}
+                            {(order.items?.length || 0)} {(order.items?.length || 0) === 1 ? 'item' : 'items'}
                           </p>
                           <p className="font-bold text-gray-900 dark:text-white">
-                            ${order.total}
+                            ₹{(order.total_amount_inr || 0).toLocaleString()}
                           </p>
                         </div>
                       </div>
@@ -308,40 +311,57 @@ const Profile: React.FC = () => {
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                       Saved Addresses
                     </h2>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                      Add New Address
+                    <button onClick={() => { setShowAddressForm(true); }} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                      {address ? 'Edit Address' : 'Add New Address'}
                     </button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {mockAddresses.map((address) => (
-                      <div
-                        key={address.id}
-                        className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative"
-                      >
-                        {address.isDefault && (
-                          <span className="absolute top-3 right-3 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full text-xs font-medium">
-                            Default
-                          </span>
-                        )}
-                        <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                          {address.type}
-                        </h3>
-                        <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                          <p>{address.name}</p>
-                          <p>{address.address}</p>
-                          <p>{address.city}, {address.state} {address.zipCode}</p>
-                        </div>
-                        <div className="flex space-x-2 mt-4">
-                          <button className="text-blue-600 hover:underline text-sm">
-                            Edit
-                          </button>
-                          <button className="text-red-600 hover:underline text-sm">
-                            Delete
-                          </button>
-                        </div>
+
+                  {!showAddressForm && address && (
+                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-6 relative">
+                      <span className="absolute top-3 right-3 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-2 py-1 rounded-full text-xs font-medium">
+                        Default
+                      </span>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-2">Shipping</h3>
+                      <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        <p>{address.firstName} {address.lastName}</p>
+                        <p>{address.address}</p>
+                        <p>{address.city}, {address.state} {address.zipCode}</p>
+                        <p>{address.country}</p>
+                        <p>{address.phone}</p>
                       </div>
-                    ))}
-                  </div>
+                      <div className="flex space-x-2 mt-4">
+                        <button onClick={() => { setAddressForm({ ...addressForm, ...address }); setShowAddressForm(true); }} className="text-blue-600 hover:underline text-sm">
+                          Edit
+                        </button>
+                        <button onClick={deleteAddress} className="text-red-600 hover:underline text-sm">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {showAddressForm && (
+                    <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input value={addressForm.firstName} onChange={(e)=>setAddressForm({ ...addressForm, firstName: e.target.value })} placeholder="First Name" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        <input value={addressForm.lastName} onChange={(e)=>setAddressForm({ ...addressForm, lastName: e.target.value })} placeholder="Last Name" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        <input value={addressForm.phone} onChange={(e)=>setAddressForm({ ...addressForm, phone: e.target.value })} placeholder="Phone" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        <input value={addressForm.address} onChange={(e)=>setAddressForm({ ...addressForm, address: e.target.value })} placeholder="Address" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white md:col-span-2" />
+                        <input value={addressForm.city} onChange={(e)=>setAddressForm({ ...addressForm, city: e.target.value })} placeholder="City" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        <input value={addressForm.state} onChange={(e)=>setAddressForm({ ...addressForm, state: e.target.value })} placeholder="State" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        <input value={addressForm.zipCode} onChange={(e)=>setAddressForm({ ...addressForm, zipCode: e.target.value })} placeholder="ZIP Code" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                        <input value={addressForm.country} onChange={(e)=>setAddressForm({ ...addressForm, country: e.target.value })} placeholder="Country" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white" />
+                      </div>
+                      <div className="flex space-x-2 mt-4">
+                        <button onClick={saveAddress} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Address</button>
+                        <button onClick={() => setShowAddressForm(false)} className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">Cancel</button>
+                      </div>
+                    </div>
+                  )}
+
+                  {!address && !showAddressForm && (
+                    <div className="text-gray-600 dark:text-gray-400">No address saved.</div>
+                  )}
                 </div>
               )}
 
