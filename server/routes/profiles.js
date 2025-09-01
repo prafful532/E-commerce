@@ -1,7 +1,19 @@
 import express from 'express'
 import Profile from '../models/Profile.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
+
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const prof = await Profile.findById(req.user.id).lean()
+    if (!prof) return res.status(404).json({ error: 'User not found' })
+    const { _id, email, full_name, role, phone, address, avatar_url, created_at } = prof
+    res.json({ data: { id: String(_id), email, full_name, role, phone: phone || '', address: address || null, avatar_url: avatar_url || null, created_at } })
+  } catch (e) {
+    res.status(500).json({ error: 'Failed to fetch profile' })
+  }
+})
 
 router.get('/', async (req, res) => {
   try {
