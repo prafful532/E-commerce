@@ -16,8 +16,8 @@ const Profile: React.FC = () => {
     phone: '',
     dateOfBirth: '',
   });
-  const [orders, setOrders] = React.useState<any[]>([]);
-  const [address, setAddress] = React.useState<any | null>(null);
+  const [orders, setOrders] = React2.useState<any[]>([]);
+  const [address, setAddress] = React2.useState<any | null>(null);
   const [showAddressForm, setShowAddressForm] = React2.useState(false);
   const [addressForm, setAddressForm] = React2.useState({
     firstName: '',
